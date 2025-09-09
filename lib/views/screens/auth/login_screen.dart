@@ -25,7 +25,11 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               Text(
                 'TikTok Clone',
-                style: TextStyle(fontSize: 34, fontWeight: FontWeight.w900, color: buttonColor),
+                style: TextStyle(
+                  fontSize: 34,
+                  fontWeight: FontWeight.w900,
+                  color: buttonColor,
+                ),
               ),
               const SizedBox(height: 10),
               const Text(
@@ -62,33 +66,37 @@ class _LoginScreenState extends State<LoginScreen> {
                   borderRadius: const BorderRadius.all(Radius.circular(5)),
                 ),
                 child: InkWell(
-                  onTap: () {},
+                  onTap:
+                      () => authController.login(
+                        _emailController.text.trim(),
+                        _passwordController.text,
+                      ),
                   child: Center(
                     child: Text(
                       'Login',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(
-                height: 15,
-              ),
+              const SizedBox(height: 15),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
                     'Don\'t have an account? ',
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
+                    style: TextStyle(fontSize: 20),
                   ),
                   InkWell(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => SignupScreen(),
-                      ),
-                    ),
+                    onTap:
+                        () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => SignupScreen(),
+                          ),
+                        ),
                     child: Text(
                       'Register',
                       style: TextStyle(fontSize: 20, color: buttonColor),

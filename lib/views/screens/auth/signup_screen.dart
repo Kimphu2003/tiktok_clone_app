@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tiktok_clone_app/utils.dart';
 
 import '../../../constants.dart';
 import '../../widgets/text_input_field.dart';
@@ -13,6 +14,7 @@ class SignupScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String profilePhoto = defaultProfilePhoto;
     return Scaffold(
       body: Container(
         alignment: Alignment.center,
@@ -42,14 +44,24 @@ class SignupScreen extends StatelessWidget {
                 const CircleAvatar(
                   radius: 64,
                   backgroundImage: NetworkImage(
-                      'https://www.pngitem.com/pimgs/m/150-1503945_transparent-user-png-default-user-image-png-png.png'),
+                      defaultProfilePhoto),
                   backgroundColor: Colors.black,
                 ),
                 Positioned(
                   bottom: -10,
                   left: 75,
                   child: IconButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      final pickedImage = await pickImage();
+                      if(pickedImage != null) {
+                        final imageUrl = await uploadImageToImgBB(pickedImage);
+                        if(imageUrl != null) {
+                          profilePhoto = imageUrl;
+                        }
+                      } else {
+                        profilePhoto = defaultProfilePhoto;
+                      }
+                    },
                     icon: Icon(
                       Icons.add_a_photo,
                       color: Colors.grey[600],
@@ -108,7 +120,12 @@ class SignupScreen extends StatelessWidget {
                 ),
               ),
               child: InkWell(
-                onTap: () {},
+                onTap: () => authController.registerUser(
+                  _usernameController.text,
+                  _emailController.text,
+                  _passwordController.text,
+                  profilePhoto,
+                ),
                 child: const Center(
                   child: Text(
                     'Register',
