@@ -1,17 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hive/hive.dart';
 
 part 'video_model.g.dart';
-
-/*
-required String videoId,
-    required String uid,
-    required String songName,
-    required String caption,
-    required String videoUrl,
-    required String thumbnail,
-    required String localPath,
-*/
-
 
 @HiveType(typeId: 0)
 class VideoModel extends HiveObject {
@@ -36,6 +26,20 @@ class VideoModel extends HiveObject {
   @HiveField(6)
   String? localPath;
 
+  @HiveField(7)
+  List<dynamic> likes;
+
+  @HiveField(8)
+  int commentCount;
+
+  @HiveField(9)
+  int shareCount;
+
+  @HiveField(10)
+  String profilePhoto;
+
+  @HiveField(11)
+  String username;
 
   VideoModel({
     required this.videoId,
@@ -45,6 +49,11 @@ class VideoModel extends HiveObject {
     required this.videoUrl,
     this.thumbnail,
     this.localPath,
+    required this.username,
+    this.likes = const [],
+    this.commentCount = 0,
+    this.shareCount = 0,
+    this.profilePhoto = '',
   });
 
   Map<String, dynamic> toJson() {
@@ -56,18 +65,47 @@ class VideoModel extends HiveObject {
       'videoUrl': videoUrl,
       'thumbnail': thumbnail,
       'localPath': localPath,
+      'likes': likes,
+      'commentCount': commentCount,
+      'shareCount': shareCount,
+      'profilePhoto': profilePhoto,
+      'username': username,
     };
   }
 
-  VideoModel fromJson(Map<String, dynamic> json) {
+  // Sửa lại từ instance method thành static method
+  static VideoModel fromJson(Map<String, dynamic> json) {
     return VideoModel(
-      videoId: json['videoId'],
-      uid: json['uid'],
-      songName: json['songName'],
-      caption: json['caption'],
-      videoUrl: json['videoUrl'],
+      videoId: json['videoId'] ?? '',
+      uid: json['uid'] ?? '',
+      songName: json['songName'] ?? '',
+      caption: json['caption'] ?? '',
+      videoUrl: json['videoUrl'] ?? '',
       thumbnail: json['thumbnail'],
       localPath: json['localPath'],
+      username: json['username'] ?? '',
+      likes: json['likes'] != null ? List<dynamic>.from(json['likes']) : [],
+      commentCount: json['commentCount'] ?? 0,
+      shareCount: json['shareCount'] ?? 0,
+      profilePhoto: json['profilePhoto'] ?? '',
+    );
+  }
+
+  static VideoModel fromSnap(DocumentSnapshot snap) {
+    var snapshot = snap.data() as Map<String, dynamic>;
+    return VideoModel(
+      videoId: snapshot['videoId'] ?? '',
+      uid: snapshot['uid'] ?? '',
+      songName: snapshot['songName'] ?? '',
+      caption: snapshot['caption'] ?? '',
+      videoUrl: snapshot['videoUrl'] ?? '',
+      thumbnail: snapshot['thumbnail'],
+      localPath: snapshot['localPath'],
+      username: snapshot['username'] ?? '',
+      likes: snapshot['likes'] != null ? List<dynamic>.from(snapshot['likes']) : [],
+      commentCount: snapshot['commentCount'] ?? 0,
+      shareCount: snapshot['shareCount'] ?? 0,
+      profilePhoto: snapshot['profilePhoto'] ?? '',
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tiktok_clone_app/controllers/auth_controller.dart';
 import 'package:tiktok_clone_app/views/screens/add_video_screen.dart';
+import 'package:tiktok_clone_app/views/screens/video_screen.dart';
 
 // COLORS
 const backgroundColor = Colors.black;
@@ -11,12 +12,12 @@ var buttonColor = Colors.red[400];
 const borderColor = Colors.grey;
 
 // PAGES
-const pages = [
-  Text('Home'),
-  Text('Search'),
-  AddVideoScreen(),
-  Text('Messages'),
-  Text('Profile'),
+List <Widget> pages = [
+  VideoScreen(),
+  const Text('Search'),
+  const AddVideoScreen(),
+  const Text('Messages'),
+  const Text('Profile'),
 ];
 
 

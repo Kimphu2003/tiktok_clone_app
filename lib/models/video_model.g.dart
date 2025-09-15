@@ -24,13 +24,18 @@ class VideoModelAdapter extends TypeAdapter<VideoModel> {
       videoUrl: fields[4] as String,
       thumbnail: fields[5] as String?,
       localPath: fields[6] as String?,
+      username: fields[11] as String? ?? '',
+      likes: fields[7] != null ? (fields[7] as List).cast<dynamic>() : [],
+      commentCount: fields[8] as int? ?? 0,
+      shareCount: fields[9] as int? ?? 0,
+      profilePhoto: fields[10] as String? ?? '',
     );
   }
 
   @override
   void write(BinaryWriter writer, VideoModel obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.videoId)
       ..writeByte(1)
@@ -44,7 +49,17 @@ class VideoModelAdapter extends TypeAdapter<VideoModel> {
       ..writeByte(5)
       ..write(obj.thumbnail)
       ..writeByte(6)
-      ..write(obj.localPath);
+      ..write(obj.localPath)
+      ..writeByte(7)
+      ..write(obj.likes)
+      ..writeByte(8)
+      ..write(obj.commentCount)
+      ..writeByte(9)
+      ..write(obj.shareCount)
+      ..writeByte(10)
+      ..write(obj.profilePhoto)
+      ..writeByte(11)
+      ..write(obj.username);
   }
 
   @override
@@ -53,7 +68,7 @@ class VideoModelAdapter extends TypeAdapter<VideoModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is VideoModelAdapter &&
-          runtimeType == other.runtimeType &&
-          typeId == other.typeId;
+          other is VideoModelAdapter &&
+              runtimeType == other.runtimeType &&
+              typeId == other.typeId;
 }

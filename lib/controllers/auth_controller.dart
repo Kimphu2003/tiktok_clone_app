@@ -9,10 +9,30 @@ import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/models/user.dart' as model;
 
 import '../utils.dart';
+import '../views/screens/auth/login_screen.dart';
 import '../views/screens/home_screen.dart';
 
 class AuthController extends GetxController {
+  late Rx<User?> _user;
   static AuthController instance = Get.find();
+
+  User get user => _user.value!;
+
+  @override
+  void onReady() {
+    super.onReady();
+    _user = Rx<User?>(firebaseAuth.currentUser);
+    _user.bindStream(firebaseAuth.authStateChanges());
+    ever(_user, _setInitialScreen);
+  }
+
+  _setInitialScreen(User? user) {
+    if (user == null) {
+      Get.offAll(() => LoginScreen());
+    } else {
+      Get.offAll(() => const HomeScreen());
+    }
+  }
 
   Future<String?> _uploadImage() async {
     try {

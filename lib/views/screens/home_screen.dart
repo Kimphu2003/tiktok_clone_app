@@ -13,13 +13,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _pageIndex = 0;
 
   @override
-  void initState() {
-    super.initState();
-
-
-  }
-
-  @override
   Widget build(BuildContext context) {
 
     return Scaffold(

@@ -35,18 +35,19 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: backgroundColor,
       ),
-      home: StreamBuilder(
-        stream: firebaseAuth.authStateChanges(),
-        builder: (context, snapshot) {
-          if(snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(),);
-          } else if (snapshot.hasData) {
-            return const HomeScreen();
-          } else {
-            return const LoginScreen();
-          }
-        },
-      ),
+      // home: StreamBuilder(
+      //   stream: firebaseAuth.authStateChanges(),
+      //   builder: (context, snapshot) {
+      //     if(snapshot.connectionState == ConnectionState.waiting) {
+      //       return const Center(child: CircularProgressIndicator(),);
+      //     } else if (snapshot.hasData) {
+      //       return const HomeScreen();
+      //     } else {
+      //       return const LoginScreen();
+      //     }
+      //   },
+      // ),
+      home: const LoginScreen(),
     );
   }
 }

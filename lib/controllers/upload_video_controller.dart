@@ -66,6 +66,8 @@ class UploadVideoController extends GetxController {
         songName: songName,
         caption: caption,
         videoUrl: savedFile.path,
+        username: userDoc['name'] ?? 'Unknown User',
+        profilePhoto: userDoc['profilePhoto'] ?? '',
       );
 
       await videoBox.add(video);
@@ -150,8 +152,6 @@ class UploadVideoController extends GetxController {
       
       Get.snackbar('Upload video', 'Uploaded to Firestore successfully');
       Get.back();
-
-
 
     } catch (e) {
       Get.snackbar('Error uploading video', '$e');
