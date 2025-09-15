@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tiktok_clone_app/constants.dart';
+import 'package:tiktok_clone_app/views/screens/comment_screen.dart';
 import 'package:tiktok_clone_app/views/widgets/circle_animation.dart';
 import 'package:tiktok_clone_app/views/widgets/video_player_item.dart';
 import 'package:get/get.dart';
@@ -73,10 +74,11 @@ class VideoScreen extends StatelessWidget {
   }
 
   likeVideo(String videoId) async {
-    DocumentSnapshot doc = await fireStore.collection('videos').doc(videoId).get();
+    DocumentSnapshot doc =
+        await fireStore.collection('videos').doc(videoId).get();
     var uid = firebaseAuth.currentUser!.uid;
 
-    if((doc.data()! as dynamic)['likes'].contains(uid)) {
+    if ((doc.data()! as dynamic)['likes'].contains(uid)) {
       await fireStore.collection('videos').doc(videoId).update({
         'likes': FieldValue.arrayRemove([uid]),
       });
@@ -169,7 +171,12 @@ class VideoScreen extends StatelessWidget {
                                       child: Icon(
                                         Icons.favorite,
                                         size: 40,
-                                        color: data.likes.contains(authController.user.uid) ? Colors.red : Colors.white,
+                                        color:
+                                            data.likes.contains(
+                                                  authController.user.uid,
+                                                )
+                                                ? Colors.red
+                                                : Colors.white,
                                       ),
                                     ),
                                     const SizedBox(height: 7),
@@ -184,7 +191,16 @@ class VideoScreen extends StatelessWidget {
                                     const SizedBox(height: 20),
 
                                     InkWell(
-                                      onTap: () {},
+                                      onTap:
+                                          () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (_) => CommentScreen(
+                                                    videoId: data.videoId,
+                                                  ),
+                                            ),
+                                          ),
                                       child: const Icon(
                                         Icons.comment,
                                         size: 40,
@@ -237,6 +253,22 @@ class VideoScreen extends StatelessWidget {
           },
         );
       }),
+    );
+  }
+
+  showCommentSection(BuildContext context, String videoId) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.75,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(children: []),
+        );
+      },
     );
   }
 }
