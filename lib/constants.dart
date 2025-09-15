@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tiktok_clone_app/controllers/auth_controller.dart';
+import 'package:tiktok_clone_app/views/screens/add_video_screen.dart';
 
 // COLORS
 const backgroundColor = Colors.black;
@@ -13,7 +14,7 @@ const borderColor = Colors.grey;
 const pages = [
   Text('Home'),
   Text('Search'),
-  Text('Add Video'),
+  AddVideoScreen(),
   Text('Messages'),
   Text('Profile'),
 ];

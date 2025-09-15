@@ -9,6 +9,7 @@ import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/models/user.dart' as model;
 
 import '../utils.dart';
+import '../views/screens/home_screen.dart';
 
 class AuthController extends GetxController {
   static AuthController instance = Get.find();
@@ -169,9 +170,9 @@ class AuthController extends GetxController {
         password: password,
       );
 
-      if (Get.isDialogOpen ?? false) {
-        Get.back();
-      }
+      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen()));
+
+      Get.back();
     } catch (e) {
       if (Get.isDialogOpen ?? false) {
         Get.back();
