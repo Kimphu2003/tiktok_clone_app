@@ -20,7 +20,7 @@ class User {
     'profilePhoto': profilePhoto,
   };
 
-  static User fromJson(DocumentSnapshot snap) {
+  static User fromSnap(DocumentSnapshot snap) {
     var snapshot = snap.data() as Map<String, dynamic>;
 
     return User(

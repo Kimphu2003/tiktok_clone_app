@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tiktok_clone_app/controllers/auth_controller.dart';
 import 'package:tiktok_clone_app/views/screens/add_video_screen.dart';
+import 'package:tiktok_clone_app/views/screens/search_screen.dart';
 import 'package:tiktok_clone_app/views/screens/video_screen.dart';
 
 // COLORS
@@ -14,7 +15,7 @@ const borderColor = Colors.grey;
 // PAGES
 List <Widget> pages = [
   VideoScreen(),
-  const Text('Search'),
+  SearchScreen(),
   const AddVideoScreen(),
   const Text('Messages'),
   const Text('Profile'),

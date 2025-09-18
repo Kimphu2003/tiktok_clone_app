@@ -1,0 +1,112 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:tiktok_clone_app/controllers/search_controller.dart'
+    as search_ctrl;
+
+class SearchScreen extends StatelessWidget {
+  SearchScreen({super.key});
+
+  final search_ctrl.SearchController searchController = Get.put(
+    search_ctrl.SearchController(),
+  );
+
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          leading: InkWell(
+            onTap: () => Navigator.of(context).pop(),
+            child: Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                searchController.searchUsers(_searchController.text);
+              },
+              child: const Text(
+                'Search',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+          title: TextFormField(
+            controller: _searchController,
+            decoration: const InputDecoration(
+              filled: false,
+              hintText: 'Search',
+              hintStyle: TextStyle(
+                fontSize: 18,
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+              prefixIcon: Icon(Icons.search, size: 30, color: Colors.white),
+              border: OutlineInputBorder(borderSide: BorderSide.none),
+            ),
+            onFieldSubmitted: (value) {
+              // searchController.searchVideos(value);
+              searchController.searchUsers(value);
+            },
+          ),
+        ),
+        body:
+            searchController.searchedUsers.isEmpty
+                // && searchController.searchedVideos.isEmpty
+                ? const Center(child: Text('No results found'))
+                :
+            (searchController.searchedUsers.isNotEmpty) ?
+            ListView(
+                  children: [
+                    if (searchController.searchedUsers.isNotEmpty)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 10, left: 10, bottom: 5),
+                        child: Text(
+                          'Users',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ...searchController.searchedUsers.map(
+                      (user) => InkWell(
+                        onTap: () {},
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundImage: NetworkImage(user.profilePhoto),
+                          ),
+                          title: Text(user.name),
+                          subtitle: Text(user.email),
+                        ),
+                      ),
+                    ),
+                    // if (searchController.searchedVideos.isNotEmpty)
+                    //   const Padding(
+                    //     padding: EdgeInsets.only(top: 20, left: 10, bottom: 5),
+                    //     child: Text(
+                    //       'Videos',
+                    //       style: TextStyle(
+                    //         fontSize: 20,
+                    //         fontWeight: FontWeight.bold,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ...searchController.searchedVideos.map(
+                    //   (video) => ListTile(
+                    //     leading: const Icon(Icons.music_note),
+                    //     title: Text(video),
+                    //   ),
+                    // ),
+                  ],
+                ) : const SizedBox(),
+      );
+    });
+  }
+}
