@@ -5,7 +5,7 @@ import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/models/video_model.dart';
 
 class VideoController extends GetxController {
-  Rx<List<VideoModel>> _videoList = Rx<List<VideoModel>> ([]);
+  final Rx<List<VideoModel>> _videoList = Rx<List<VideoModel>> ([]);
   List<VideoModel> get videoList => _videoList.value;
 
   @override

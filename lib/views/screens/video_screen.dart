@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tiktok_clone_app/constants.dart';
@@ -12,7 +14,7 @@ class VideoScreen extends StatelessWidget {
 
   final VideoController videoController = Get.put(VideoController());
 
-  buildProfile(String profilePhoto) {
+  buildProfile(String profilePhoto, String uid) {
     return SizedBox(
       width: 60,
       height: 60,
@@ -36,13 +38,50 @@ class VideoScreen extends StatelessWidget {
                 ),
               ),
             ),
+          ), Positioned(
+            left: 5,
+            child: Container(
+              width: 50,
+              height: 50,
+              padding: const EdgeInsets.all(1),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(25),
+                child: Image(
+                  image: NetworkImage(profilePhoto),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
           ),
+          authController.user.uid != uid ? Positioned(
+            bottom: 0,
+            left: 20,
+            child: Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.add,
+                  size: 15,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ) : const SizedBox(),
         ],
       ),
     );
   }
 
-  buildMusicAlbum(String profilePhoto) {
+  buildMusicAlbum(String thumbnail) {
     return SizedBox(
       height: 60,
       width: 60,
@@ -62,8 +101,8 @@ class VideoScreen extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(25),
-              child: Image(
-                image: NetworkImage(profilePhoto),
+              child: Image.file(
+                File(thumbnail),
                 fit: BoxFit.cover,
               ),
             ),
@@ -113,7 +152,7 @@ class VideoScreen extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Container(
-                              margin: const EdgeInsets.only(left: 20),
+                              margin: const EdgeInsets.only(left: 20, bottom: 20),
                               child: Column(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceEvenly,
@@ -162,7 +201,7 @@ class VideoScreen extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                buildProfile(data.profilePhoto),
+                                buildProfile(data.profilePhoto, data.uid),
                                 const SizedBox(height: 20),
                                 Column(
                                   children: [
@@ -218,7 +257,9 @@ class VideoScreen extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 20),
                                     InkWell(
-                                      onTap: () {},
+                                      onTap: () {
+                                        // showShareBottomSheet(context, data.videoId);
+                                      },
                                       child: const Icon(
                                         Icons.reply,
                                         size: 40,
@@ -238,7 +279,7 @@ class VideoScreen extends StatelessWidget {
                                   ],
                                 ),
                                 CircleAnimation(
-                                  child: buildMusicAlbum(data.profilePhoto),
+                                  child: buildMusicAlbum(data.thumbnail!),
                                 ),
                               ],
                             ),
@@ -254,6 +295,43 @@ class VideoScreen extends StatelessWidget {
         );
       }),
     );
+  }
+
+  showShareBottomSheet(BuildContext context, String videoId) {
+    showModalBottomSheet(context: context, builder: (context) {
+      return Container(
+        height: MediaQuery.of(context).size.height * 0.25,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            ListTile(
+              leading: Icon(Icons.share),
+              title: Text('Share to'),
+              onTap: () {
+                // Implement share functionality
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.link),
+              title: Text('Copy Link'),
+              onTap: () {
+                // Implement copy link functionality
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.more_horiz),
+              title: Text('More'),
+              onTap: () {
+                // Implement more options functionality
+              },
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   showCommentSection(BuildContext context, String videoId) {

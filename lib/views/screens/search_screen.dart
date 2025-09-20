@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone_app/controllers/search_controller.dart'
     as search_ctrl;
+import 'package:tiktok_clone_app/views/screens/profile_screen.dart';
 
 class SearchScreen extends StatelessWidget {
   SearchScreen({super.key});
@@ -18,10 +19,10 @@ class SearchScreen extends StatelessWidget {
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.black,
-          leading: InkWell(
-            onTap: () => Navigator.of(context).pop(),
-            child: Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-          ),
+          // leading: InkWell(
+          //   onTap: () => Navigator.of(context).pop(),
+          //   child: Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+          // ),
           actions: [
             TextButton(
               onPressed: () {
@@ -39,13 +40,12 @@ class SearchScreen extends StatelessWidget {
           ],
           title: TextFormField(
             controller: _searchController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               filled: false,
               hintText: 'Search',
               hintStyle: TextStyle(
                 fontSize: 18,
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
+                color: Colors.grey[400],
               ),
               prefixIcon: Icon(Icons.search, size: 30, color: Colors.white),
               border: OutlineInputBorder(borderSide: BorderSide.none),
@@ -77,7 +77,7 @@ class SearchScreen extends StatelessWidget {
                       ),
                     ...searchController.searchedUsers.map(
                       (user) => InkWell(
-                        onTap: () {},
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen(uid: user.uid),),),
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundImage: NetworkImage(user.profilePhoto),

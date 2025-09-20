@@ -69,7 +69,7 @@ class _CommentScreenState extends State<CommentScreen> {
                           subtitle: Row(
                             children: [
                               Text(
-                                timeago.format(comment.datePublished.toLocal()),
+                                timeago.format(comment.datePublished.toDate()),
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
@@ -121,8 +121,8 @@ class _CommentScreenState extends State<CommentScreen> {
                     ),
                   ),
                   trailing: TextButton(
-                    onPressed: () {
-                      commentController.postComment(controller.text);
+                    onPressed: () async {
+                      await commentController.postComment(controller.text);
                       controller.clear();
                     },
                     child: Text(

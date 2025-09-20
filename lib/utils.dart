@@ -49,12 +49,14 @@ Future<String?> uploadImageToImgBB(File image) async {
 
     if (response.statusCode == 200) {
       final jsonResponse = json.decode(responseData);
-      if (jsonResponse['success'] == true) {
+      // if (jsonResponse['success'] == true) {
         // Return the direct image URL
         return jsonResponse['data']['url'];
-      } else {
-        throw Exception('ImgBB upload failed: ${jsonResponse['error']['message']}');
-      }
+      // }
+    // else {
+    //     throw Exception('ImgBB upload failed: ${jsonResponse['error']['message']}');
+
+      // }
     } else {
       throw Exception('HTTP Error: ${response.statusCode}');
     }

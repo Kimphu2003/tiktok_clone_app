@@ -51,6 +51,17 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: const Text(
+          'Confirm Video',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -95,6 +106,10 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
                           ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: buttonColor,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 30,
+                          vertical: 10,
+                        )
                       ),
                       child: const Text(
                         'Share',

@@ -54,7 +54,7 @@ class CommentController extends GetxController {
         Comment comment = Comment(
           username: user['username'],
           comment: commentText.trim(),
-          datePublished: DateTime.now(),
+          datePublished: Timestamp.now(),
           likes: [],
           profilePhoto: user['profilePhoto'],
           uid: authController.user.uid,

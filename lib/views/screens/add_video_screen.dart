@@ -45,7 +45,7 @@ class AddVideoScreen extends StatelessWidget {
               SimpleDialogOption(
                 onPressed: () async {
                   await pickVideo(context);
-                  Navigator.pop(context);
+                  // Navigator.pop(context);
                 },
                 child: const Text(
                   'Choose from gallery',
