@@ -9,6 +9,11 @@ class ProfileController extends GetxController {
 
   final Rx<String> _uid = ''.obs;
 
+  final Rx<String> username = ''.obs;
+  final Rx<String> profilePhoto = ''.obs;
+  final Rx<String> bio = ''.obs;
+  final Rx<String> tiktokId = ''.obs;
+
   updateUserId(String uid) {
     _uid.value = uid;
     getUserData();
@@ -29,8 +34,10 @@ class ProfileController extends GetxController {
     DocumentSnapshot userDoc =
         await fireStore.collection('users').doc(_uid.value).get();
     Map<String, dynamic> userData = userDoc.data()! as Map<String, dynamic>;
-    String username = userData['name'];
-    String profilePhoto = userData['profilePhoto'];
+    username.value = userData['name'];
+    profilePhoto.value =userData['profilePhoto'];
+    bio.value = userData['bio'];
+    tiktokId.value = userData['name'].toString().toLowerCase().removeAllWhitespace;
     int likes = 0;
     int followers = 0;
     int following = 0;
@@ -80,6 +87,9 @@ class ProfileController extends GetxController {
       'following': following.toString(),
       'likes': likes.toString(),
       'isFollowing': isFollowing,
+      'uid': _uid.value,
+      'bio': bio,
+      'tiktokId': tiktokId,
     };
     update();
   }
@@ -107,7 +117,10 @@ class ProfileController extends GetxController {
           .doc(_uid.value)
           .set({});
 
-      _user.value.update('followers', (value) => (int.parse(value) + 1).toString());
+      _user.value.update(
+        'followers',
+        (value) => (int.parse(value) + 1).toString(),
+      );
     } else {
       await fireStore
           .collection('users')
@@ -123,9 +136,43 @@ class ProfileController extends GetxController {
           .doc(_uid.value)
           .delete();
 
-      _user.value.update('followers', (value) => (int.parse(value) - 1).toString());
+      _user.value.update(
+        'followers',
+        (value) => (int.parse(value) - 1).toString(),
+      );
     }
     _user.value.update('isFollowing', (value) => !value);
+    update();
+  }
+
+  editUserProfile(String field, String value) async {
+    switch (field) {
+      case 'Profile name':
+        await fireStore.collection('users').doc(_uid.value).update({
+          'name': value,
+        });
+        break;
+      case 'TikTok ID':
+        await fireStore.collection('users').doc(_uid.value).update({
+          'tiktokId': value,
+        });
+        break;
+      case 'Biography':
+        await fireStore.collection('users').doc(_uid.value).update({
+          'bio': value,
+        });
+        break;
+      default:
+        break;
+    }
+    _user.value.update(
+      field == 'Profile name'
+          ? 'name'
+          : field == 'Biography'
+          ? 'bio'
+          : 'TikTok ID',
+      (value) => value = value,
+    );
     update();
   }
 }

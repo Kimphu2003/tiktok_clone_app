@@ -5,16 +5,32 @@ import '../../../constants.dart';
 import '../../widgets/text_input_field.dart';
 import 'login_screen.dart';
 
-class SignupScreen extends StatelessWidget {
-  SignupScreen({super.key});
+class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
 
+  @override
+  State<SignupScreen> createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _emailController = TextEditingController();
+
   final TextEditingController _passwordController = TextEditingController();
+
   final TextEditingController _usernameController = TextEditingController();
+
+  String profilePhoto = '';
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _usernameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    String profilePhoto = defaultProfilePhoto;
     return Scaffold(
       body: Container(
         alignment: Alignment.center,
@@ -41,10 +57,9 @@ class SignupScreen extends StatelessWidget {
             ),
             Stack(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 64,
-                  backgroundImage: NetworkImage(
-                      defaultProfilePhoto),
+                  backgroundImage: NetworkImage(profilePhoto),
                   backgroundColor: Colors.black,
                 ),
                 Positioned(
@@ -56,10 +71,14 @@ class SignupScreen extends StatelessWidget {
                       if(pickedImage != null) {
                         final imageUrl = await uploadImageToImgBB(pickedImage);
                         if(imageUrl != null) {
-                          profilePhoto = imageUrl;
+                          setState(() {
+                            profilePhoto = imageUrl;
+                          });
                         }
                       } else {
-                        profilePhoto = defaultProfilePhoto;
+                        setState(() {
+                          profilePhoto = defaultProfilePhoto;
+                        });
                       }
                     },
                     icon: Icon(

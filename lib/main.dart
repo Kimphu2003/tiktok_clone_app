@@ -6,6 +6,8 @@ import 'package:hive_flutter/adapters.dart';
 import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/models/video_model.dart';
 import 'package:tiktok_clone_app/views/screens/auth/login_screen.dart';
+import 'package:tiktok_clone_app/views/screens/edit_profile_detail_screen.dart';
+import 'package:tiktok_clone_app/views/screens/edit_profile_screen.dart';
 import 'package:tiktok_clone_app/views/screens/home_screen.dart';
 
 import 'controllers/auth_controller.dart';
@@ -47,7 +49,23 @@ class MyApp extends StatelessWidget {
       //     }
       //   },
       // ),
-      home: const LoginScreen(),
+      initialRoute: '/',
+      getPages: [
+        GetPage(name: '/', page: () => HomeScreen()),
+        GetPage(name: '/details', page: () => EditProfileScreen()),
+        GetPage(
+          name: '/edit-profile-detail/profile-name',
+          page: () => EditProfileDetailScreen(field: 'Profile name'),
+        ),
+        GetPage(
+          name: '/edit-profile-detail/tiktok-id',
+          page: () => EditProfileDetailScreen(field: 'TikTok ID'),
+        ),
+        GetPage(
+          name: '/edit-profile-detail/biography',
+          page: () => EditProfileDetailScreen(field: 'Biography'),
+        ),
+      ],
     );
   }
 }

@@ -6,7 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone_app/constants.dart';
-import 'package:tiktok_clone_app/models/user.dart' as model;
+import 'package:tiktok_clone_app/models/user_model.dart' as model;
 
 import '../utils.dart';
 import '../views/screens/auth/login_screen.dart';

@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone_app/constants.dart';
 
-import '../models/user.dart';
+import '../models/user_model.dart';
 
 class SearchController extends GetxController {
   // final Rx<List<String>> _searchedVideos = Rx<List<String>>([]);

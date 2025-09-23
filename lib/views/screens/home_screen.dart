@@ -14,7 +14,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(
         onTap: (int index) {
@@ -30,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
         showSelectedLabels: false,
         showUnselectedLabels: false,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home',),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
           BottomNavigationBarItem(icon: CustomAddIcon(), label: ''),
           BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
