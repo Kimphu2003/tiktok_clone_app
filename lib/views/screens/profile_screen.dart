@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/controllers/profile_controller.dart';
+import 'package:tiktok_clone_app/controllers/upload_video_controller.dart';
 import 'package:tiktok_clone_app/views/screens/edit_profile_screen.dart';
 import 'package:tiktok_clone_app/views/widgets/custom_tab_bar.dart';
 
@@ -39,18 +40,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Colors.black,
-            title: Obx(
-             () {
-                return Text(
-                  controller.username.toString(),
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                );
-              }
-            ),
+            title: Obx(() {
+              return Text(
+                controller.username.toString(),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              );
+            }),
             centerTitle: true,
             leading: InkWell(
               onTap: () {},
@@ -97,13 +96,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   clipBehavior: Clip.none,
                   children: [
                     ClipOval(
-                      child: Obx( () =>
-                        CachedNetworkImage(
+                      child: Obx(
+                        () => CachedNetworkImage(
                           fit: BoxFit.cover,
                           width: 100,
                           height: 100,
                           placeholder:
-                              (context, url) => const CircularProgressIndicator(),
+                              (context, url) =>
+                                  const CircularProgressIndicator(),
                           errorWidget:
                               (context, url, error) => const Icon(Icons.error),
                           imageUrl: controller.profilePhoto.toString(),
@@ -124,9 +124,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onTap: () async {
                             final pickedImage = await pickImage();
                             if (pickedImage != null) {
-                              final imageUrl = await uploadImageToImgBB(
-                                pickedImage,
-                              );
+                              final imageUrl =
+                                  await UploadVideoController.uploadToCloudinary(
+                                    pickedImage,
+                                    'profile_images',
+                                  );
                               if (imageUrl != null) {
                                 profileController.user['profilePhoto'] =
                                     imageUrl;
@@ -147,30 +149,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Obx(
-                    () {
-                      return GestureDetector(
-                        onTap: () {
-                          Clipboard.setData(ClipboardData(text: '@${controller.tiktokId.value}'));
-                          Get.snackbar(
-                            'Copied to Clipboard',
-                            '@${controller.tiktokId.value}',
-                            snackPosition: SnackPosition.BOTTOM,
-                            backgroundColor: Colors.grey[900],
-                            colorText: Colors.white,
-                          );
-                        },
-                        child: Text(
+                  Obx(() {
+                    return GestureDetector(
+                      onTap: () {
+                        Clipboard.setData(
+                          ClipboardData(text: '@${controller.tiktokId.value}'),
+                        );
+                        Get.snackbar(
+                          'Copied to Clipboard',
                           '@${controller.tiktokId.value}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.white,
-                          ),
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: Colors.grey[900],
+                          colorText: Colors.white,
+                        );
+                      },
+                      child: Text(
+                        '@${controller.tiktokId.value}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white,
                         ),
-                      );
-                    }
-                  ),
+                      ),
+                    );
+                  }),
                   const SizedBox(width: 5),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -405,27 +407,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
               const SizedBox(height: 10),
               GestureDetector(
-                onTap: () => Get.toNamed(
-                  '/edit-profile-detail/biography',
-                  arguments: {
-                    'field': 'Biography',
-                    'value': controller.bio.value,
-                  },
-                ),
-                child: Obx(
-                  () {
-                    return Text(
-                      controller.bio.value.isEmpty
-                          ? 'Click to add your bio'
-                          : controller.bio.value,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.grey[400],
-                      ),
-                    );
-                  }
-                ),
+                onTap:
+                    () => Get.toNamed(
+                      '/edit-profile-detail/biography',
+                      arguments: {
+                        'field': 'Biography',
+                        'value': controller.bio.value,
+                      },
+                    ),
+                child: Obx(() {
+                  return Text(
+                    controller.bio.value.isEmpty
+                        ? 'Click to add your bio'
+                        : controller.bio.value,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey[400],
+                    ),
+                  );
+                }),
               ),
               widget.uid == authController.user.uid
                   ? Row(
@@ -437,8 +438,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         size: 20,
                       ),
                       TextButton(
-                        onPressed: () {
-                        },
+                        onPressed: () {},
                         child: Text(
                           'Your orders',
                           style: TextStyle(

@@ -1,4 +1,5 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -17,15 +18,27 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
   @override
   void initState() {
     super.initState();
-    videoPlayerController = VideoPlayerController.networkUrl(
-      Uri.parse(widget.videoUrl),
-    )..initialize().then((_) {
-      setState(() {
-        videoPlayerController.play();
-        videoPlayerController.setVolume(1);
-        videoPlayerController.setLooping(true);
-      });
-    });
+    // if (widget.videoUrl.startsWith('http')) {
+    //   videoPlayerController = VideoPlayerController.networkUrl(
+    //     Uri.parse(widget.videoUrl),
+    //   )
+    //     ..initialize().then((_) {
+    //       setState(() {
+    //         videoPlayerController.play();
+    //         videoPlayerController.setVolume(1);
+    //         videoPlayerController.setLooping(true);
+    //       });
+    //     });
+    // } else {
+      videoPlayerController = VideoPlayerController.file(File(widget.videoUrl))
+        ..initialize().then((_) {
+          setState(() {
+            videoPlayerController.play();
+            videoPlayerController.setVolume(1);
+            videoPlayerController.setLooping(true);
+          });
+        });
+    // }
   }
 
   @override

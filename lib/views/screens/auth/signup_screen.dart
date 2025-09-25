@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:tiktok_clone_app/controllers/upload_video_controller.dart';
 import 'package:tiktok_clone_app/utils.dart';
-
+import 'package:get/get.dart';
 import '../../../constants.dart';
 import '../../widgets/text_input_field.dart';
 import 'login_screen.dart';
@@ -13,6 +14,8 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
+  final UploadVideoController uploadVideoController = Get.put(UploadVideoController());
+
   final TextEditingController _emailController = TextEditingController();
 
   final TextEditingController _passwordController = TextEditingController();
@@ -69,7 +72,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     onPressed: () async {
                       final pickedImage = await pickImage();
                       if(pickedImage != null) {
-                        final imageUrl = await uploadImageToImgBB(pickedImage);
+                        final imageUrl = await UploadVideoController.uploadToCloudinary(pickedImage, 'profile_images');
                         if(imageUrl != null) {
                           setState(() {
                             profilePhoto = imageUrl;

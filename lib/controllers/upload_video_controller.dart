@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,22 +9,15 @@ import 'package:tiktok_clone_app/constants.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:video_compress/video_compress.dart';
+import 'package:http/http.dart' as http;
+import 'dart:typed_data';
 
 import '../models/video_model.dart';
 
 class UploadVideoController extends GetxController {
   final Box<VideoModel> videoBox = Hive.box<VideoModel>('videos');
 
-  // _compressedVideo(String videoPath) async {
-  //   final compressedVideo = await VideoCompress.compressVideo(
-  //     videoPath,
-  //     quality: VideoQuality.MediumQuality,
-  //     deleteOrigin: false,
-  //   );
-  //   return compressedVideo!.file;
-  // }
-
-  Future<String> _uploadVideoToStorage(
+  Future<String> saveVideoLocally(
     String videoId,
     String videoPath,
     String songName,
@@ -79,32 +73,12 @@ class UploadVideoController extends GetxController {
     }
   }
 
-  Future<String> _uploadImageToStorage(String id, String videoPath) async {
-    final thumbnail = await VideoCompress.getFileThumbnail(videoPath);
-    final appDir = await getApplicationDocumentsDirectory();
-    final imageDir = Directory('${appDir.path}/images');
-
-    if (!await imageDir.exists()) {
-      await imageDir.create(recursive: true);
-    }
-
-    final originalFileName = path.basename(thumbnail.path);
-    final fileExtension = path.extension(originalFileName);
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final newFileName = '${id}_$timestamp$fileExtension';
-
-    final savedImage = await thumbnail.copy('${imageDir.path}/$newFileName');
-
-    if (!await savedImage.exists()) {
-      throw Exception('Failed to copy thumbnail image');
-    }
-
-    print('Thumbnail stored locally: ${savedImage.path}');
-
-    return savedImage.path;
-  }
-
-  uploadVideo(String songName, String caption, String videoPath) async {
+  uploadVideo(
+    String songName,
+    String caption,
+    String videoPath,
+    File videoFile,
+  ) async {
     try {
       if (songName.isEmpty || caption.isEmpty || videoPath.isEmpty) {
         Get.snackbar('Missing Information', 'Please fill all required fields');
@@ -117,27 +91,27 @@ class UploadVideoController extends GetxController {
       }
 
       String uid = firebaseAuth.currentUser!.uid;
-      DocumentSnapshot userDoc =
-          await fireStore.collection('users').doc(uid).get();
-      var allDocs = await fireStore.collection('videos').get();
-      int len = allDocs.docs.length;
-      debugPrint('Total videos in Firestore: $len');
-      String localPath = await _uploadVideoToStorage(
-        'Video $len',
+      var userData = await getUserData(uid);
+      final videoId = await _generateVideoId();
+
+      final localPath = await saveVideoLocally(
+        videoId,
         videoPath,
         songName,
         caption,
         uid,
-        userDoc.data() as Map<String, dynamic>,
+        userData,
       );
-      debugPrint('local path: $localPath');
 
-      String thumbnail = await _uploadImageToStorage('Video $len', videoPath);
-      debugPrint('thumbnail: $thumbnail');
+      final thumbnailUrl = await _generateAndUploadThumbnail(videoPath);
 
-      String videoId = 'video_${len}_${DateTime.now().millisecondsSinceEpoch}';
+      final cloudVideoUrl = await uploadVideoToCloudinary(videoFile, 'video');
+      debugPrint('cloud video url: $cloudVideoUrl');
+      if (cloudVideoUrl == null) {
+        throw Exception('Failed to upload video to Cloudinary');
+      }
 
-      debugPrint('videoId: $videoId');
+      debugPrint('before uploading to firestore');
 
       await uploadVideoToFirestore(
         videoId: videoId,
@@ -145,16 +119,29 @@ class UploadVideoController extends GetxController {
         songName: songName,
         caption: caption,
         videoUrl: localPath,
-        thumbnail: thumbnail,
+        cloudVideoUrl: cloudVideoUrl,
+        thumbnail: thumbnailUrl ?? '',
         localPath: localPath,
-        userDoc: userDoc.data() as Map<String, dynamic>,
+        userData: userData,
       );
-      
-      Get.snackbar('Upload video', 'Uploaded to Firestore successfully');
-      Get.back();
 
+      debugPrint('after uploading to firestore');
+
+      Get.snackbar('Success', 'Video uploaded successfully');
+      Get.back();
     } catch (e) {
       Get.snackbar('Error uploading video', '$e');
+    }
+  }
+
+  Future<String> _generateVideoId() async {
+    try {
+      var allDocs = await fireStore.collection('videos').get();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      return 'video_${allDocs.docs.length}_$timestamp';
+    } catch (e) {
+      Get.snackbar('Error generating video ID', '$e');
+      return 'video_offline_${DateTime.now().millisecondsSinceEpoch}';
     }
   }
 
@@ -164,9 +151,10 @@ class UploadVideoController extends GetxController {
     required String songName,
     required String caption,
     required String videoUrl,
+    String? cloudVideoUrl,
     required String thumbnail,
     required String localPath,
-    required Map<String, dynamic> userDoc,
+    required Map<String, dynamic> userData,
   }) async {
     try {
       await fireStore.collection('videos').doc(videoId).set({
@@ -178,15 +166,129 @@ class UploadVideoController extends GetxController {
         'songName': songName,
         'caption': caption,
         'videoUrl': videoUrl,
+        'cloudVideoUrl': cloudVideoUrl ?? '',
         'thumbnail': thumbnail,
         'localPath': localPath, // Store local path for offline access
-        'profilePhoto': userDoc['profilePhoto'] ?? '',
-        'username': userDoc['name'] ?? 'Unknown User',
+        'profilePhoto': userData['profilePhoto'] ?? '',
+        'username': userData['name'] ?? 'Unknown User',
         'timestamp': FieldValue.serverTimestamp(),
         'createdAt': DateTime.now().toIso8601String(),
       });
     } catch (e) {
-      Get.snackbar('Error uploading video to Firestore', '$e');
+      // Get.snackbar('Error uploading video to Firestore', '$e');
+      throw Exception('Error uploading video to Firestore: $e');
+    }
+  }
+
+  static Future<String?> uploadToCloudinary(
+    File file,
+    String resourceType,
+  ) async {
+    try {
+      final url = Uri.parse(
+        'https://api.cloudinary.com/v1_1/$cloudName/$resourceType/upload',
+      );
+      final request = http.MultipartRequest('POST', url);
+
+      request.files.add(await http.MultipartFile.fromPath('file', file.path));
+      request.fields['upload_preset'] = uploadPreset;
+      request.fields['public_id'] =
+          '${resourceType}_${DateTime.now().millisecondsSinceEpoch}';
+
+      var response = await request.send();
+      var responseData = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        var jsonResponse = jsonDecode(responseData);
+        debugPrint('Upload response: $jsonResponse');
+        return jsonResponse['secure_url'];
+      } else {
+        debugPrint('Upload failed: $responseData');
+        throw Exception('Cloudinary upload failed: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      Get.snackbar('Error uploading image to Cloudinary', '$e');
+      return null;
+    }
+  }
+
+  static Future<String?> uploadImageBytes(Uint8List imageBytes) async {
+    try {
+      final url = Uri.parse(
+        'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
+      );
+      var request = http.MultipartRequest('POST', url);
+
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          imageBytes,
+          filename: 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        ),
+      );
+
+      request.fields['upload_preset'] = uploadPreset;
+      request.fields['public_id'] =
+          'image_${DateTime.now().millisecondsSinceEpoch}';
+
+      var response = await request.send();
+      var responseData = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        var jsonResponse = jsonDecode(responseData);
+        debugPrint('Upload response: $jsonResponse');
+        return jsonResponse['secure_url'];
+      } else {
+        debugPrint('Upload failed: $responseData');
+        throw Exception('Cloudinary upload failed: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      throw Exception('Error uploading image bytes: $e');
+    }
+  }
+
+  Future<String?> uploadVideoToCloudinary(
+    File videoFile,
+    String resourceType,
+  ) async {
+    try {
+      return await uploadToCloudinary(videoFile, 'video');
+    } catch (e) {
+      debugPrint('Cloudinary upload failed: $e');
+      Get.snackbar(
+        'Error uploading video to Cloudinary. Please Try Again',
+        '$e',
+      );
+      return null;
+    }
+  }
+
+  Future<String?> _generateAndUploadThumbnail(String videoPath) async {
+    try {
+      final thumbnailBytes = await VideoCompress.getByteThumbnail(
+        videoPath,
+        quality: 75,
+        position: 1000, // Get thumbnail from 1 second mark
+      );
+
+      if (thumbnailBytes == null) {
+        debugPrint('Warning: Could not generate thumbnail');
+        return null;
+      }
+
+      return await uploadImageBytes(thumbnailBytes);
+    } catch (e) {
+      throw Exception('Error generating thumbnail: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> getUserData(String uid) async {
+    try {
+      final userDoc = await fireStore.collection('users').doc(uid).get();
+      return userDoc.data() as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('Error getting user document: $e');
+      return {'name': 'Unknown User', 'profilePhoto': ''};
     }
   }
 }

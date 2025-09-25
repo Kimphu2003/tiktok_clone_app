@@ -99,10 +99,11 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
                     const SizedBox(height: 10),
                     ElevatedButton(
                       onPressed:
-                          () => uploadVideoController.uploadVideo(
+                          () async => await uploadVideoController.uploadVideo(
                             songController.text.trim(),
                             captionController.text.trim(),
                             widget.videoPath,
+                            widget.videoFile
                           ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: buttonColor,

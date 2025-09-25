@@ -3,16 +3,58 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tiktok_clone_app/constants.dart';
+import 'package:tiktok_clone_app/models/video_model.dart';
 import 'package:tiktok_clone_app/views/screens/comment_screen.dart';
 import 'package:tiktok_clone_app/views/widgets/circle_animation.dart';
 import 'package:tiktok_clone_app/views/widgets/video_player_item.dart';
 import 'package:get/get.dart';
 import '../../controllers/video_controller.dart';
 
-class VideoScreen extends StatelessWidget {
-  VideoScreen({super.key});
+class VideoScreen extends StatefulWidget {
+  const VideoScreen({super.key});
 
+  @override
+  State<VideoScreen> createState() => _VideoScreenState();
+}
+
+class _VideoScreenState extends State<VideoScreen> {
   final VideoController videoController = Get.put(VideoController());
+
+  _toggleFollowUser(String uid, bool isFollowing) async {
+    try {
+      if (isFollowing) {
+        await fireStore
+            .collection('users')
+            .doc(uid)
+            .collection('followers')
+            .doc(authController.user.uid)
+            .delete();
+
+        await fireStore
+            .collection('users')
+            .doc(uid)
+            .collection('following')
+            .doc(authController.user.uid)
+            .delete();
+      } else {
+        await fireStore
+            .collection('users')
+            .doc(uid)
+            .collection('followers')
+            .doc(authController.user.uid)
+            .set({});
+
+        await fireStore
+            .collection('users')
+            .doc(uid)
+            .collection('following')
+            .doc(authController.user.uid)
+            .set({});
+      }
+    } catch (e) {
+      throw Exception('Error toggling follow status: $e');
+    }
+  }
 
   buildProfile(String profilePhoto, String uid) {
     return SizedBox(
@@ -32,56 +74,67 @@ class VideoScreen extends StatelessWidget {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(25),
-                child: Image(
-                  image: NetworkImage(profilePhoto),
+                child: Image.network(
+                  profilePhoto,
                   fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ), Positioned(
-            left: 5,
-            child: Container(
-              width: 50,
-              height: 50,
-              padding: const EdgeInsets.all(1),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(25),
-                child: Image(
-                  image: NetworkImage(profilePhoto),
-                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stacktrace) {
+                    return Container(
+                      color: Colors.grey[300],
+                      child: Icon(Icons.person, color: Colors.grey[600]),
+                    );
+                  },
                 ),
               ),
             ),
           ),
-          authController.user.uid != uid ? Positioned(
-            bottom: 0,
-            left: 20,
-            child: Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.add,
-                  size: 15,
-                  color: Colors.white,
+          authController.user.uid != uid
+              ? Positioned(
+                bottom: 0,
+                left: 20,
+                child: StreamBuilder<DocumentSnapshot>(
+                  stream:
+                      fireStore
+                          .collection('users')
+                          .doc(uid)
+                          .collection('followers')
+                          .doc(authController.user.uid)
+                          .snapshots(),
+                  builder: (context, snapshot) {
+                    final isFollowing =
+                        snapshot.hasData && snapshot.data!.exists;
+                    return Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                        // border: Border.all(color: Colors.white, width: 1),
+                      ),
+                      child: InkWell(
+                        onTap: () => _toggleFollowUser(uid, isFollowing),
+                        child: Center(
+                          child: Icon(
+                            isFollowing ? Icons.check : Icons.add,
+                            size: 15,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              ),
-            ),
-          ) : const SizedBox(),
+              )
+              : const SizedBox(),
         ],
       ),
     );
   }
 
   buildMusicAlbum(String thumbnail) {
+    final file = File(thumbnail);
+    if (!file.existsSync()) {
+      return const SizedBox();
+    }
     return SizedBox(
       height: 60,
       width: 60,
@@ -101,10 +154,7 @@ class VideoScreen extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(25),
-              child: Image.file(
-                File(thumbnail),
-                fit: BoxFit.cover,
-              ),
+              child: Image.file(file, fit: BoxFit.cover),
             ),
           ),
         ],
@@ -152,7 +202,10 @@ class VideoScreen extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Container(
-                              margin: const EdgeInsets.only(left: 20, bottom: 20),
+                              margin: const EdgeInsets.only(
+                                left: 20,
+                                bottom: 20,
+                              ),
                               child: Column(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceEvenly,
@@ -298,40 +351,43 @@ class VideoScreen extends StatelessWidget {
   }
 
   showShareBottomSheet(BuildContext context, String videoId) {
-    showModalBottomSheet(context: context, builder: (context) {
-      return Container(
-        height: MediaQuery.of(context).size.height * 0.25,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            ListTile(
-              leading: Icon(Icons.share),
-              title: Text('Share to'),
-              onTap: () {
-                // Implement share functionality
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.link),
-              title: Text('Copy Link'),
-              onTap: () {
-                // Implement copy link functionality
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.more_horiz),
-              title: Text('More'),
-              onTap: () {
-                // Implement more options functionality
-              },
-            ),
-          ],
-        ),
-      );
-    });
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.25,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              ListTile(
+                leading: Icon(Icons.share),
+                title: Text('Share to'),
+                onTap: () {
+                  // Implement share functionality
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.link),
+                title: Text('Copy Link'),
+                onTap: () {
+                  // Implement copy link functionality
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.more_horiz),
+                title: Text('More'),
+                onTap: () {
+                  // Implement more options functionality
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   showCommentSection(BuildContext context, String videoId) {

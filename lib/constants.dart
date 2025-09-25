@@ -26,9 +26,14 @@ final firebaseAuth = FirebaseAuth.instance;
 final fireStore = FirebaseFirestore.instance;
 
 // IMGBB
-const String imgbbApiKey = 'acfe190ed95ee62b65531f7ccbf2511b';
-const String imgbbUrl = 'https://api.imgbb.com/1/upload';
+// const String imgbbApiKey = 'acfe190ed95ee62b65531f7ccbf2511b';
+// const String imgbbUrl = 'https://api.imgbb.com/1/upload';
 
+// CLOUDINARY
+const String apiKey = '783255288532875';
+const String cloudName = 'dai3kxqrv';
+const String uploadSecret = 'tzfO3tcwgRQJXiKZT8ztW0AEO2k';
+const String uploadPreset = 'tiktok_clone_app';
 // PROFILE PHOTO
 const String defaultProfilePhoto =
     'https://www.pngitem.com/pimgs/m/150-1503945_transparent-user-png-default-user-image-png-png.png';

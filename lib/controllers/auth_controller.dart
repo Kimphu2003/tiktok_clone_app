@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone_app/constants.dart';
+import 'package:tiktok_clone_app/controllers/upload_video_controller.dart';
 import 'package:tiktok_clone_app/models/user_model.dart' as model;
 
 import '../utils.dart';
@@ -47,7 +49,10 @@ class AuthController extends GetxController {
         barrierDismissible: false,
       );
 
-      final String? imageUrl = await uploadImageToImgBB(selectedImage);
+      final String? imageUrl = await UploadVideoController.uploadToCloudinary(
+        selectedImage,
+        'profile_images',
+      );
 
       return imageUrl;
     } catch (e) {

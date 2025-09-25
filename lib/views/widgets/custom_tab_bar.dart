@@ -1,8 +1,8 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:tiktok_clone_app/views/screens/video_screen.dart';
 
 class CustomTabBar extends StatelessWidget {
@@ -31,7 +31,11 @@ class CustomTabBar extends StatelessWidget {
                 // text: "Home",
               ),
               Tab(
-                icon: Image.asset('assets/icons/ic_save.png', color: Colors.grey[600], height: 20,),
+                icon: Image.asset(
+                  'assets/icons/ic_save.png',
+                  color: Colors.grey[600],
+                  height: 20,
+                ),
                 // text: "Account",
               ),
               Tab(
@@ -68,10 +72,17 @@ class CustomTabBar extends StatelessWidget {
       itemBuilder: (context, index) {
         String thumbnail = userData['thumbnails'][index];
         return GestureDetector(
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => VideoScreen()));
-            },
-            child: Image.file(File(thumbnail), fit: BoxFit.cover,));
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => VideoScreen()),
+            );
+          },
+          child:
+              thumbnail.startsWith('http')
+                  ? CachedNetworkImage(fit: BoxFit.cover, imageUrl: thumbnail)
+                  : Image.file(File(thumbnail), fit: BoxFit.cover),
+        );
       },
     );
   }

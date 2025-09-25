@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone_app/constants.dart';
+import 'package:tiktok_clone_app/controllers/upload_video_controller.dart';
 
 import '../../controllers/profile_controller.dart';
 import '../../utils.dart';
@@ -83,9 +84,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               onTap: () async {
                                 final pickedImage = await pickImage();
                                 if (pickedImage != null) {
-                                  final imageUrl = await uploadImageToImgBB(
-                                    pickedImage,
-                                  );
+                                  final imageUrl = await UploadVideoController.uploadToCloudinary(pickedImage, 'profile_images');
                                   if (imageUrl != null) {
                                     setState(() {
                                       userData['profilePhoto'] = imageUrl;
