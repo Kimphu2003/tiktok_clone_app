@@ -77,6 +77,8 @@ class _SignupScreenState extends State<SignupScreen> {
                           setState(() {
                             profilePhoto = imageUrl;
                           });
+                        } else {
+                          profilePhoto = defaultProfilePhoto;
                         }
                       } else {
                         setState(() {

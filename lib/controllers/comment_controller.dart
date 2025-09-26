@@ -41,7 +41,12 @@ class CommentController extends GetxController {
                 .collection('users')
                 .doc(authController.user.uid)
                 .get();
-        final user = userDoc.data() as Map<String, dynamic>;
+        final userData = userDoc.data() as Map<String, dynamic>?;
+
+        if(userData == null) {
+          throw Exception('User data not found');
+        }
+
         var allDocs =
             await fireStore
                 .collection('videos')
@@ -52,11 +57,11 @@ class CommentController extends GetxController {
         String videoId = 'comment_$len';
 
         Comment comment = Comment(
-          username: user['username'],
+          username: userData['name'],
           comment: commentText.trim(),
           datePublished: Timestamp.now(),
           likes: [],
-          profilePhoto: user['profilePhoto'],
+          profilePhoto: userData['profilePhoto'],
           uid: authController.user.uid,
           videoId: videoId,
         );
