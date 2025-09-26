@@ -31,11 +31,7 @@ class CustomTabBar extends StatelessWidget {
                 // text: "Home",
               ),
               Tab(
-                icon: Image.asset(
-                  'assets/icons/ic_save.png',
-                  color: Colors.grey[600],
-                  height: 20,
-                ),
+                icon: Icon(Icons.bookmark_border),
                 // text: "Account",
               ),
               Tab(
@@ -79,9 +75,7 @@ class CustomTabBar extends StatelessWidget {
             );
           },
           child:
-              thumbnail.startsWith('http')
-                  ? CachedNetworkImage(fit: BoxFit.cover, imageUrl: thumbnail)
-                  : Image.file(File(thumbnail), fit: BoxFit.cover),
+              CachedNetworkImage(fit: BoxFit.cover, imageUrl: thumbnail),
         );
       },
     );

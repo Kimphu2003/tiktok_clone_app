@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tiktok_clone_app/models/video_model.dart';
 
 class User {
   final String uid;
@@ -6,6 +7,7 @@ class User {
   final String email;
   final String profilePhoto;
   final String bio;
+  final List<VideoModel> favoriteVideos;
 
   User({
     required this.uid,
@@ -13,6 +15,7 @@ class User {
     required this.email,
     this.profilePhoto = '',
     this.bio = '',
+    this.favoriteVideos = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -21,6 +24,7 @@ class User {
     'email': email,
     'profilePhoto': profilePhoto,
     'bio': bio,
+    'favoriteVideos': favoriteVideos.map((video) => video.toJson()).toList(),
   };
 
   static User fromSnap(DocumentSnapshot snap) {
@@ -32,6 +36,14 @@ class User {
       email: snapshot['email'],
       profilePhoto: snapshot['profilePhoto'],
       bio: snapshot['bio'],
+      favoriteVideos:
+          (snapshot['favoriteVideos'] as List<dynamic>?)
+              ?.map(
+                (videoData) =>
+                    VideoModel.fromJson(videoData as Map<String, dynamic>),
+              )
+              .toList() ??
+          [],
     );
   }
 }

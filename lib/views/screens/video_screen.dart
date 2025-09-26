@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tiktok_clone_app/constants.dart';
-import 'package:tiktok_clone_app/models/video_model.dart';
 import 'package:tiktok_clone_app/views/screens/comment_screen.dart';
 import 'package:tiktok_clone_app/views/widgets/circle_animation.dart';
 import 'package:tiktok_clone_app/views/widgets/video_player_item.dart';
@@ -19,42 +18,6 @@ class VideoScreen extends StatefulWidget {
 
 class _VideoScreenState extends State<VideoScreen> {
   final VideoController videoController = Get.put(VideoController());
-
-  _toggleFollowUser(String uid, bool isFollowing) async {
-    try {
-      if (isFollowing) {
-        await fireStore
-            .collection('users')
-            .doc(uid)
-            .collection('followers')
-            .doc(authController.user.uid)
-            .delete();
-
-        await fireStore
-            .collection('users')
-            .doc(uid)
-            .collection('following')
-            .doc(authController.user.uid)
-            .delete();
-      } else {
-        await fireStore
-            .collection('users')
-            .doc(uid)
-            .collection('followers')
-            .doc(authController.user.uid)
-            .set({});
-
-        await fireStore
-            .collection('users')
-            .doc(uid)
-            .collection('following')
-            .doc(authController.user.uid)
-            .set({});
-      }
-    } catch (e) {
-      throw Exception('Error toggling follow status: $e');
-    }
-  }
 
   buildProfile(String profilePhoto, String uid) {
     return SizedBox(
@@ -106,17 +69,21 @@ class _VideoScreenState extends State<VideoScreen> {
                       width: 20,
                       height: 20,
                       decoration: BoxDecoration(
-                        color: Colors.red,
+                        color: isFollowing ? Colors.white : Colors.red,
                         borderRadius: BorderRadius.circular(10),
                         // border: Border.all(color: Colors.white, width: 1),
                       ),
                       child: InkWell(
-                        onTap: () => _toggleFollowUser(uid, isFollowing),
+                        onTap:
+                            () => videoController.toggleFollowUser(
+                              uid,
+                              isFollowing,
+                            ),
                         child: Center(
                           child: Icon(
                             isFollowing ? Icons.check : Icons.add,
                             size: 15,
-                            color: Colors.white,
+                            color: isFollowing ? Colors.red : Colors.white,
                           ),
                         ),
                       ),
@@ -162,20 +129,26 @@ class _VideoScreenState extends State<VideoScreen> {
     );
   }
 
-  likeVideo(String videoId) async {
-    DocumentSnapshot doc =
-        await fireStore.collection('videos').doc(videoId).get();
-    var uid = firebaseAuth.currentUser!.uid;
-
-    if ((doc.data()! as dynamic)['likes'].contains(uid)) {
-      await fireStore.collection('videos').doc(videoId).update({
-        'likes': FieldValue.arrayRemove([uid]),
-      });
-    } else {
-      await fireStore.collection('videos').doc(videoId).update({
-        'likes': FieldValue.arrayUnion([uid]),
-      });
-    }
+  _buildActionButton({
+    required IconData icon,
+    required int count,
+    required VoidCallback onTap,
+    Color color = Colors.white,
+  }) {
+    return Column(
+      children: [
+        InkWell(onTap: onTap, child: Icon(icon, color: color, size: 40)),
+        const SizedBox(height: 7),
+        Text(
+          count > 0 ? count.toString() : '0',
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -191,7 +164,10 @@ class _VideoScreenState extends State<VideoScreen> {
             final data = videoController.videoList[index];
             return Stack(
               children: [
-                VideoPlayerItem(videoUrl: data.videoUrl),
+                VideoPlayerItem(
+                  cloudVideoUrl: data.videoUrl,
+                  videoId: data.videoId,
+                ),
                 Column(
                   children: [
                     const SizedBox(height: 100),
@@ -256,81 +232,63 @@ class _VideoScreenState extends State<VideoScreen> {
                               children: [
                                 buildProfile(data.profilePhoto, data.uid),
                                 const SizedBox(height: 20),
-                                Column(
-                                  children: [
-                                    InkWell(
-                                      onTap: () => likeVideo(data.videoId),
-                                      child: Icon(
-                                        Icons.favorite,
-                                        size: 40,
-                                        color:
-                                            data.likes.contains(
-                                                  authController.user.uid,
-                                                )
-                                                ? Colors.red
-                                                : Colors.white,
+                                _buildActionButton(
+                                  icon: Icons.favorite,
+                                  count: data.likes.length,
+                                  color:
+                                      data.likes.contains(
+                                            authController.user.uid,
+                                          )
+                                          ? Colors.red
+                                          : Colors.white,
+                                  onTap:
+                                      () => videoController.likeVideo(
+                                        data.videoId,
                                       ),
-                                    ),
-                                    const SizedBox(height: 7),
-                                    Text(
-                                      data.likes.length.toString(),
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-
-                                    InkWell(
-                                      onTap:
-                                          () => Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (_) => CommentScreen(
-                                                    videoId: data.videoId,
-                                                  ),
-                                            ),
-                                          ),
-                                      child: const Icon(
-                                        Icons.comment,
-                                        size: 40,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 7),
-                                    Text(
-                                      data.commentCount.toString(),
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    InkWell(
-                                      onTap: () {
-                                        // showShareBottomSheet(context, data.videoId);
-                                      },
-                                      child: const Icon(
-                                        Icons.reply,
-                                        size: 40,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 7),
-                                    Text(
-                                      data.shareCount.toString(),
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                  ],
                                 ),
+                                const SizedBox(height: 20),
+                                _buildActionButton(
+                                  icon: Icons.comment_rounded,
+                                  count: data.commentCount,
+                                  onTap:
+                                      () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) => CommentScreen(
+                                                videoId: data.videoId,
+                                              ),
+                                        ),
+                                      ),
+                                ),
+                                const SizedBox(height: 20),
+                                Obx(() {
+                                  return _buildActionButton(
+                                    icon:
+                                        videoController.isVideoFavorited(
+                                              data.videoId,
+                                            )
+                                            ? Icons.bookmark
+                                            : Icons.bookmark_border,
+                                    count: data.favoriteCount,
+                                    color:
+                                        videoController.isVideoFavorited(
+                                              data.videoId,
+                                            )
+                                            ? Colors.yellow
+                                            : Colors.white,
+                                    onTap:
+                                        () => videoController
+                                            .toggleFavoriteVideo(data.videoId),
+                                  );
+                                }),
+                                const SizedBox(height: 20),
+                                _buildActionButton(
+                                  icon: Icons.reply,
+                                  count: data.shareCount,
+                                  onTap: () {},
+                                ),
+                                const SizedBox(height: 20),
                                 CircleAnimation(
                                   child: buildMusicAlbum(data.thumbnail!),
                                 ),
@@ -362,12 +320,23 @@ class _VideoScreenState extends State<VideoScreen> {
           ),
           child: Column(
             children: [
-              ListTile(
-                leading: Icon(Icons.share),
-                title: Text('Share to'),
-                onTap: () {
-                  // Implement share functionality
-                },
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ListTile(
+                    leading: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.grey[900],
+                      ),
+                      child: Icon(Icons.download, color: Colors.white),
+                    ),
+                    title: Text('Save Video'),
+                    onTap: () {
+                      // Implement share functionality
+                    },
+                  ),
+                ],
               ),
               ListTile(
                 leading: Icon(Icons.link),
@@ -390,19 +359,19 @@ class _VideoScreenState extends State<VideoScreen> {
     );
   }
 
-  showCommentSection(BuildContext context, String videoId) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.75,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(children: []),
-        );
-      },
-    );
-  }
+  // showCommentSection(BuildContext context, String videoId) {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     builder: (context) {
+  //       return Container(
+  //         height: MediaQuery.of(context).size.height * 0.75,
+  //         decoration: BoxDecoration(
+  //           color: Colors.white,
+  //           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  //         ),
+  //         child: Column(children: []),
+  //       );
+  //     },
+  //   );
+  // }
 }

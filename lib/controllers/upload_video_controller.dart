@@ -94,6 +94,8 @@ class UploadVideoController extends GetxController {
       var userData = await getUserData(uid);
       final videoId = await _generateVideoId();
 
+      final videoUrl = await uploadVideoToCloudinary(videoFile, 'video');
+
       final localPath = await saveVideoLocally(
         videoId,
         videoPath,
@@ -118,7 +120,7 @@ class UploadVideoController extends GetxController {
         uid: uid,
         songName: songName,
         caption: caption,
-        videoUrl: localPath,
+        videoUrl: videoUrl ?? '',
         cloudVideoUrl: cloudVideoUrl,
         thumbnail: thumbnailUrl ?? '',
         localPath: localPath,
@@ -207,8 +209,7 @@ class UploadVideoController extends GetxController {
         throw Exception('Cloudinary upload failed: ${response.reasonPhrase}');
       }
     } catch (e) {
-      Get.snackbar('Error uploading image to Cloudinary', '$e');
-      return null;
+      throw Exception('Error uploading to Cloudinary: $e');
     }
   }
 
