@@ -129,10 +129,8 @@ class UploadVideoController extends GetxController {
 
       debugPrint('after uploading to firestore');
 
-      Get.snackbar('Success', 'Video uploaded successfully');
-      Get.back();
     } catch (e) {
-      Get.snackbar('Error uploading video', '$e');
+      throw Exception('Error uploading video: $e');
     }
   }
 
