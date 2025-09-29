@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -15,7 +14,7 @@ import '../views/screens/auth/login_screen.dart';
 import '../views/screens/home_screen.dart';
 
 class AuthController extends GetxController {
-  late Rx<User?> _user;
+  final Rx<User?> _user = Rx<User?>(firebaseAuth.currentUser);
   static AuthController instance = Get.find();
 
   User get user => _user.value!;
@@ -23,7 +22,7 @@ class AuthController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-    _user = Rx<User?>(firebaseAuth.currentUser);
+    // _user = Rx<User?>(firebaseAuth.currentUser);
     _user.bindStream(firebaseAuth.authStateChanges());
     ever(_user, _setInitialScreen);
   }

@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/views/screens/comment_screen.dart';
+import 'package:tiktok_clone_app/views/screens/search_screen.dart';
 import 'package:tiktok_clone_app/views/widgets/circle_animation.dart';
 import 'package:tiktok_clone_app/views/widgets/video_player_item.dart';
 import 'package:get/get.dart';
@@ -18,6 +20,374 @@ class VideoScreen extends StatefulWidget {
 
 class _VideoScreenState extends State<VideoScreen> {
   final VideoController videoController = Get.put(VideoController());
+  final PageController _pageController = PageController();
+  List<String> currentUserFollowers = [];
+
+  int _selectedIndex = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    videoController.getUsersFollowings(authController.user.uid).then((list) {
+      setState(() {
+        currentUserFollowers = list;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.only(top: 45.0),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  InkWell(
+                    onTap: () {},
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(
+                          CupertinoIcons.tv,
+                          size: 33,
+                          color: Colors.white,
+                        ),
+                        Text(
+                          'LIVE',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(),
+                  _buildTab('Following', 0),
+                  _buildTab('For You', 1),
+                  const Divider(),
+                  InkWell(
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => SearchScreen()),
+                        ),
+                    child: const Icon(
+                      CupertinoIcons.search,
+                      size: 30,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged:
+                    (index) => setState(() => _selectedIndex = index),
+                children: [
+                  _buildFeed(size, 'Following'),
+                  _buildFeed(size, 'For You'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _onTabTapped(int index) {
+    setState(() => _selectedIndex = index);
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  Widget _buildTab(String tab, int index) {
+    final isSelected = _selectedIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _onTabTapped(index));
+      },
+      child: Column(
+        children: [
+          Text(
+            tab,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected ? Colors.white : Colors.grey,
+            ),
+          ),
+          isSelected
+              ? Container(
+                margin: const EdgeInsets.only(top: 4),
+                height: 2,
+                width: 20,
+                color: Colors.white,
+              )
+              : Container(
+                margin: const EdgeInsets.only(top: 4),
+                height: 2,
+                width: 20,
+                color: Colors.transparent,
+              ),
+        ],
+      ),
+    );
+  }
+
+  Obx _buildFeed(Size size, String label) {
+    return Obx(() {
+      final allVideos = videoController.videoList;
+      final filteredVideos =
+          label == 'Following'
+              ? allVideos
+                  .where((video) => currentUserFollowers.contains(video.uid))
+                  .toList()
+              : allVideos;
+      if (_selectedIndex == 1 && currentUserFollowers.isEmpty) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      return PageView.builder(
+        itemCount: filteredVideos.length,
+        scrollDirection: Axis.vertical,
+        controller: PageController(initialPage: 0, viewportFraction: 1),
+        itemBuilder: (context, index) {
+          final data = filteredVideos[index];
+          return Stack(
+            children: [
+              VideoPlayerItem(videoUrl: data.videoUrl, videoId: data.videoId),
+              Column(
+                children: [
+                  const SizedBox(height: 100),
+                  Expanded(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Container(
+                            margin: const EdgeInsets.only(left: 20, bottom: 20),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  data.username,
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Text(
+                                  data.caption,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.music_note,
+                                      size: 15,
+                                      color: Colors.grey,
+                                    ),
+                                    Text(
+                                      data.songName,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 100,
+                          margin: EdgeInsets.only(top: size.height / 5),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              buildProfile(data.profilePhoto, data.uid),
+                              const SizedBox(height: 20),
+                              _buildActionButton(
+                                icon: Icons.favorite,
+                                count: data.likes.length,
+                                color:
+                                    data.likes.contains(authController.user.uid)
+                                        ? Colors.red
+                                        : Colors.white,
+                                onTap:
+                                    () =>
+                                        videoController.likeVideo(data.videoId),
+                              ),
+                              const SizedBox(height: 20),
+                              _buildActionButton(
+                                icon: Icons.comment_rounded,
+                                count: data.commentCount,
+                                onTap:
+                                    () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (_) => CommentScreen(
+                                              videoId: data.videoId,
+                                            ),
+                                      ),
+                                    ),
+                              ),
+                              const SizedBox(height: 20),
+                              Obx(() {
+                                return _buildActionButton(
+                                  icon:
+                                      videoController.isVideoFavorited(
+                                            data.videoId,
+                                          )
+                                          ? Icons.bookmark
+                                          : Icons.bookmark_border,
+                                  count: data.favoriteCount,
+                                  color:
+                                      videoController.isVideoFavorited(
+                                            data.videoId,
+                                          )
+                                          ? Colors.yellow
+                                          : Colors.white,
+                                  onTap:
+                                      () => videoController.toggleFavoriteVideo(
+                                        data.videoId,
+                                      ),
+                                );
+                              }),
+                              const SizedBox(height: 20),
+                              _buildActionButton(
+                                icon: Icons.reply,
+                                count: data.shareCount,
+                                onTap:
+                                    () => showShareBottomSheet(
+                                      context,
+                                      data.videoId,
+                                    ),
+                              ),
+                              const SizedBox(height: 20),
+                              CircleAnimation(
+                                child: buildMusicAlbum(data.thumbnail!),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+    });
+  }
+
+  showShareBottomSheet(BuildContext context, String videoId) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height * 0.5,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    ListTile(
+                      leading: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.grey[900],
+                        ),
+                        child: Icon(Icons.download, color: Colors.white),
+                      ),
+                      title: Text('Save Video'),
+                      onTap: () {},
+                    ),
+                  ],
+                ),
+              ),
+              // ListTile(
+              //   leading: Container(
+              //     decoration: BoxDecoration(
+              //       shape: BoxShape.circle,
+              //       color: Colors.grey[900],
+              //     ),
+              //     child: Icon(Icons.bookmark, color: Colors.white),
+              //   ),
+              //   title: Text('Add to Favorites'),
+              //   onTap: () {
+              //     // Implement copy link functionality
+              //   },
+              // ),
+              // ListTile(
+              //   leading: Container(decoration: BoxDecoration(
+              //     shape: BoxShape.circle,
+              //     color: Colors.grey[900],
+              //   ),child: Icon(Icons.speed, color: Colors.white,)),
+              //   title: Text('Speed'),
+              //   onTap: () {
+              //     // Implement more options functionality
+              //   },
+              // ),
+              // ListTile(
+              //   leading: Container(decoration: BoxDecoration(
+              //     shape: BoxShape.circle,
+              //     color: Colors.grey[900],
+              //   ),child: Icon(Icons.phone_iphone_sharp , color: Colors.white,)),
+              //   title: Text('Compact View'),
+              //   onTap: () {
+              //     // Implement more options functionality
+              //   },
+              // ),
+              // ListTile(
+              //   leading: Container(decoration: BoxDecoration(
+              //     shape: BoxShape.circle,
+              //     color: Colors.grey[900],
+              //   ),child: Icon(CupertinoIcons.arrow_up_square_fill, color: Colors.white,)),
+              //   title: Text('Scroll Automatically'),
+              //   onTap: () {
+              //     // Implement more options functionality
+              //   },
+              // ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   buildProfile(String profilePhoto, String uid) {
     return SizedBox(
@@ -150,228 +520,4 @@ class _VideoScreenState extends State<VideoScreen> {
       ],
     );
   }
-
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    return Scaffold(
-      body: Obx(() {
-        return PageView.builder(
-          itemCount: videoController.videoList.length,
-          scrollDirection: Axis.vertical,
-          controller: PageController(initialPage: 0, viewportFraction: 1),
-          itemBuilder: (context, index) {
-            final data = videoController.videoList[index];
-            return Stack(
-              children: [
-                VideoPlayerItem(
-                  cloudVideoUrl: data.videoUrl,
-                  videoId: data.videoId,
-                ),
-                Column(
-                  children: [
-                    const SizedBox(height: 100),
-                    Expanded(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.max,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            child: Container(
-                              margin: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 20,
-                              ),
-                              child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    data.username,
-                                    style: const TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  Text(
-                                    data.caption,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.music_note,
-                                        size: 15,
-                                        color: Colors.grey,
-                                      ),
-                                      Text(
-                                        data.songName,
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Container(
-                            width: 100,
-                            margin: EdgeInsets.only(top: size.height / 5),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                buildProfile(data.profilePhoto, data.uid),
-                                const SizedBox(height: 20),
-                                _buildActionButton(
-                                  icon: Icons.favorite,
-                                  count: data.likes.length,
-                                  color:
-                                      data.likes.contains(
-                                            authController.user.uid,
-                                          )
-                                          ? Colors.red
-                                          : Colors.white,
-                                  onTap:
-                                      () => videoController.likeVideo(
-                                        data.videoId,
-                                      ),
-                                ),
-                                const SizedBox(height: 20),
-                                _buildActionButton(
-                                  icon: Icons.comment_rounded,
-                                  count: data.commentCount,
-                                  onTap:
-                                      () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (_) => CommentScreen(
-                                                videoId: data.videoId,
-                                              ),
-                                        ),
-                                      ),
-                                ),
-                                const SizedBox(height: 20),
-                                Obx(() {
-                                  return _buildActionButton(
-                                    icon:
-                                        videoController.isVideoFavorited(
-                                              data.videoId,
-                                            )
-                                            ? Icons.bookmark
-                                            : Icons.bookmark_border,
-                                    count: data.favoriteCount,
-                                    color:
-                                        videoController.isVideoFavorited(
-                                              data.videoId,
-                                            )
-                                            ? Colors.yellow
-                                            : Colors.white,
-                                    onTap:
-                                        () => videoController
-                                            .toggleFavoriteVideo(data.videoId),
-                                  );
-                                }),
-                                const SizedBox(height: 20),
-                                _buildActionButton(
-                                  icon: Icons.reply,
-                                  count: data.shareCount,
-                                  onTap: () {},
-                                ),
-                                const SizedBox(height: 20),
-                                CircleAnimation(
-                                  child: buildMusicAlbum(data.thumbnail!),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          },
-        );
-      }),
-    );
-  }
-
-  showShareBottomSheet(BuildContext context, String videoId) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.25,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  ListTile(
-                    leading: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.grey[900],
-                      ),
-                      child: Icon(Icons.download, color: Colors.white),
-                    ),
-                    title: Text('Save Video'),
-                    onTap: () {
-                      // Implement share functionality
-                    },
-                  ),
-                ],
-              ),
-              ListTile(
-                leading: Icon(Icons.link),
-                title: Text('Copy Link'),
-                onTap: () {
-                  // Implement copy link functionality
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.more_horiz),
-                title: Text('More'),
-                onTap: () {
-                  // Implement more options functionality
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // showCommentSection(BuildContext context, String videoId) {
-  //   showModalBottomSheet(
-  //     context: context,
-  //     builder: (context) {
-  //       return Container(
-  //         height: MediaQuery.of(context).size.height * 0.75,
-  //         decoration: BoxDecoration(
-  //           color: Colors.white,
-  //           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-  //         ),
-  //         child: Column(children: []),
-  //       );
-  //     },
-  //   );
-  // }
 }

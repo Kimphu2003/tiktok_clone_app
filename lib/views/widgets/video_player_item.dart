@@ -5,10 +5,10 @@ import 'package:video_player/video_player.dart';
 
 
 class VideoPlayerItem extends StatefulWidget {
-  final String cloudVideoUrl;
+  final String videoUrl;
   final String videoId;
 
-  const VideoPlayerItem({super.key, required this.cloudVideoUrl, required this.videoId});
+  const VideoPlayerItem({super.key, required this.videoUrl, required this.videoId});
 
   @override
   State<VideoPlayerItem> createState() => _VideoPlayerItemState();
@@ -21,7 +21,7 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
   @override
   void initState() {
     super.initState();
-    videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(widget.cloudVideoUrl))
+    videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
       ..initialize().then((_) {
         if (mounted) {
           setState(() {
@@ -31,6 +31,14 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
           });
         }
       });
+    
+    videoPlayerController.addListener(() {
+      if(mounted) {
+        if(videoPlayerController.value.hasError) {
+          print("Video Player Error: ${videoPlayerController.value.errorDescription}");
+        }
+      }
+    });
   }
 
   @override

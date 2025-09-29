@@ -5,7 +5,6 @@ import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/models/video_model.dart';
-import 'package:tiktok_clone_app/views/screens/auth/login_screen.dart';
 import 'package:tiktok_clone_app/views/screens/edit_profile_detail_screen.dart';
 import 'package:tiktok_clone_app/views/screens/edit_profile_screen.dart';
 import 'package:tiktok_clone_app/views/screens/home_screen.dart';
@@ -37,18 +36,6 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: backgroundColor,
       ),
-      // home: StreamBuilder(
-      //   stream: firebaseAuth.authStateChanges(),
-      //   builder: (context, snapshot) {
-      //     if(snapshot.connectionState == ConnectionState.waiting) {
-      //       return const Center(child: CircularProgressIndicator(),);
-      //     } else if (snapshot.hasData) {
-      //       return const HomeScreen();
-      //     } else {
-      //       return const LoginScreen();
-      //     }
-      //   },
-      // ),
       initialRoute: '/',
       getPages: [
         GetPage(name: '/', page: () => HomeScreen()),

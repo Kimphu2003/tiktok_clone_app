@@ -30,6 +30,8 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
     UploadVideoController(),
   );
 
+  bool _isSubmitting = false;
+
   @override
   void initState() {
     super.initState();
@@ -55,10 +57,7 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
         backgroundColor: Colors.black,
         title: const Text(
           'Confirm Video',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
         ),
         centerTitle: true,
       ),
@@ -98,21 +97,32 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
                     ),
                     const SizedBox(height: 10),
                     ElevatedButton(
-                      onPressed:
-                          () async {
-                            await uploadVideoController.uploadVideo(
-                                songController.text.trim(),
-                                captionController.text.trim(),
-                                widget.videoPath,
-                                widget.videoFile
-                            );
-                          },
+                      onPressed: () async {
+                        if (_isSubmitting) {
+                          debugPrint('Already submitting, please wait.');
+                          return;
+                        }
+                        setState(() {
+                          _isSubmitting = true;
+                        });
+                        await uploadVideoController.uploadVideo(
+                          songController.text.trim(),
+                          captionController.text.trim(),
+                          widget.videoPath,
+                          widget.videoFile,
+                        );
+                        setState(() {
+                          _isSubmitting = false;
+                          debugPrint('Video uploaded completed.');
+                          Get.back();
+                        });
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: buttonColor,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 30,
                           vertical: 10,
-                        )
+                        ),
                       ),
                       child: const Text(
                         'Share',
