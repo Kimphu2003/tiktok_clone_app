@@ -42,8 +42,6 @@ class ProfileController extends GetxController {
     int followers = 0;
     int following = 0;
 
-    bool isFollowing = false;
-
     for (var doc in myVideos.docs) {
       likes += (doc.data()['likes'] as List).length;
     }
@@ -65,31 +63,26 @@ class ProfileController extends GetxController {
             .get();
     following = followingDoc.docs.length;
 
-    fireStore
+    var doc = await fireStore
         .collection('users')
         .doc(_uid.value)
         .collection('followers')
         .doc(authController.user.uid)
-        .get()
-        .then((value) {
-          if (value.exists) {
-            isFollowing = true;
-          } else {
-            isFollowing = false;
-          }
-        });
+        .get();
+
+    bool isFollowing = doc.exists;
 
     _user.value = {
-      'name': username,
-      'profilePhoto': profilePhoto,
+      'name': username.value,
+      'profilePhoto': profilePhoto.value,
       'thumbnails': thumbnails,
       'followers': followers.toString(),
       'following': following.toString(),
       'likes': likes.toString(),
       'isFollowing': isFollowing,
       'uid': _uid.value,
-      'bio': bio,
-      'tiktokId': tiktokId,
+      'bio': bio.value,
+      'tiktokId': tiktokId.value,
     };
     update();
   }

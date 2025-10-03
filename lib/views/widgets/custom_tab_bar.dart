@@ -1,8 +1,7 @@
-import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/views/screens/video_screen.dart';
 
 class CustomTabBar extends StatelessWidget {
@@ -12,49 +11,83 @@ class CustomTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 4,
-      child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          backgroundColor: Colors.transparent,
-          bottom: TabBar(
-            physics: BouncingScrollPhysics(),
-            indicatorColor: Colors.white,
-            indicatorWeight: 3,
-            indicatorSize: TabBarIndicatorSize.tab,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white30,
-            tabs: [
-              Tab(
-                icon: Icon(Icons.menu),
-                // text: "Home",
+    return userData['uid'] == authController.user.uid
+        ? DefaultTabController(
+          length: 4,
+          child: Scaffold(
+            appBar: AppBar(
+              automaticallyImplyLeading: false,
+              backgroundColor: Colors.transparent,
+              bottom: TabBar(
+                physics: BouncingScrollPhysics(),
+                indicatorColor: Colors.white,
+                indicatorWeight: 3,
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white30,
+                tabs: [
+                  Tab(
+                    icon: Icon(Icons.menu),
+                    // text: "Home",
+                  ),
+                  Tab(
+                    icon: Icon(Icons.bookmark_border),
+                    // text: "Account",
+                  ),
+                  Tab(
+                    icon: Icon(Icons.favorite_border),
+                    // text: "Alarm",
+                  ),
+                  Tab(
+                    icon: Icon(Icons.lock_outline),
+                    // text: "Alarm",
+                  ),
+                ],
               ),
-              Tab(
-                icon: Icon(Icons.bookmark_border),
-                // text: "Account",
-              ),
-              Tab(
-                icon: Icon(Icons.favorite_border),
-                // text: "Alarm",
-              ),
-              Tab(
-                icon: Icon(Icons.lock_outline),
-                // text: "Alarm",
-              ),
-            ],
+            ),
+            body: TabBarView(
+              children: [
+                displayPersonalVideos(userData),
+                Center(child: Icon(Icons.favorite)),
+                Center(child: Icon(Icons.favorite_border)),
+                Center(child: Icon(Icons.lock_outline)),
+              ],
+            ),
           ),
-        ),
-        body: TabBarView(
-          children: [
-            displayPersonalVideos(userData),
-            Center(child: Icon(Icons.favorite)),
-            Center(child: Icon(Icons.favorite_border)),
-            Center(child: Icon(Icons.lock_outline)),
-          ],
-        ),
-      ),
-    );
+        )
+        : DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            appBar: AppBar(
+              automaticallyImplyLeading: false,
+              backgroundColor: Colors.transparent,
+              bottom: TabBar(
+                physics: BouncingScrollPhysics(),
+                indicatorColor: Colors.white,
+                indicatorWeight: 3,
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white30,
+                tabs: [
+                  Tab(
+                    icon: Icon(Icons.menu),
+                    // text: "Home",
+                  ),
+                  Tab(
+                    icon: Icon(Icons.bookmark_border),
+                    // text: "Account",
+                  ),
+                ],
+              ),
+            ),
+            body: TabBarView(
+              children: [
+                displayPersonalVideos(userData),
+                Center(child: Icon(Icons.favorite)),
+              ],
+            ),
+          ),
+        );
   }
 
   displayPersonalVideos(Map<String, dynamic> userData) {
@@ -74,8 +107,7 @@ class CustomTabBar extends StatelessWidget {
               MaterialPageRoute(builder: (_) => VideoScreen()),
             );
           },
-          child:
-              CachedNetworkImage(fit: BoxFit.cover, imageUrl: thumbnail),
+          child: CachedNetworkImage(fit: BoxFit.cover, imageUrl: thumbnail),
         );
       },
     );

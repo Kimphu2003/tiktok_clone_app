@@ -5,8 +5,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/views/screens/comment_screen.dart';
+import 'package:tiktok_clone_app/views/screens/profile_screen.dart';
 import 'package:tiktok_clone_app/views/screens/search_screen.dart';
 import 'package:tiktok_clone_app/views/widgets/circle_animation.dart';
+import 'package:tiktok_clone_app/views/widgets/tiktok_bottom_sheet.dart';
 import 'package:tiktok_clone_app/views/widgets/video_player_item.dart';
 import 'package:get/get.dart';
 import '../../controllers/video_controller.dart';
@@ -28,11 +30,25 @@ class _VideoScreenState extends State<VideoScreen> {
   @override
   void initState() {
     super.initState();
-    videoController.getUsersFollowings(authController.user.uid).then((list) {
-      setState(() {
-        currentUserFollowers = list;
-      });
-    });
+    fetchCurrentUserFollowers();
+  }
+
+  Future<void> fetchCurrentUserFollowers() async {
+    try {
+      final QuerySnapshot snapshot = await fireStore
+          .collection('users')
+          .doc(authController.user.uid)
+          .collection('followers')
+          .get();
+      if(snapshot.docs.isNotEmpty) {
+        setState(() {
+          currentUserFollowers =
+              snapshot.docs.map((doc) => doc.id).toList();
+        });
+      }
+    } catch (e) {
+      print('Error fetching followers: $e');
+    }
   }
 
   @override
@@ -186,12 +202,23 @@ class _VideoScreenState extends State<VideoScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(
-                                  data.username,
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                InkWell(
+                                  onTap:
+                                      () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) =>
+                                                  ProfileScreen(uid: data.uid),
+                                        ),
+                                      ),
+                                  child: Text(
+                                    data.username,
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
                                 Text(
@@ -283,10 +310,11 @@ class _VideoScreenState extends State<VideoScreen> {
                                 icon: Icons.reply,
                                 count: data.shareCount,
                                 onTap:
-                                    () => showShareBottomSheet(
-                                      context,
-                                      data.videoId,
-                                    ),
+                                    () =>
+                                        TikTokBottomSheet.showShareBottomSheet(
+                                          context,
+                                          data.videoId,
+                                        ),
                               ),
                               const SizedBox(height: 20),
                               CircleAnimation(
@@ -307,162 +335,87 @@ class _VideoScreenState extends State<VideoScreen> {
     });
   }
 
-  showShareBottomSheet(BuildContext context, String videoId) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Container(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height * 0.5,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ListTile(
-                      leading: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.grey[900],
-                        ),
-                        child: Icon(Icons.download, color: Colors.white),
-                      ),
-                      title: Text('Save Video'),
-                      onTap: () {},
-                    ),
-                  ],
-                ),
-              ),
-              // ListTile(
-              //   leading: Container(
-              //     decoration: BoxDecoration(
-              //       shape: BoxShape.circle,
-              //       color: Colors.grey[900],
-              //     ),
-              //     child: Icon(Icons.bookmark, color: Colors.white),
-              //   ),
-              //   title: Text('Add to Favorites'),
-              //   onTap: () {
-              //     // Implement copy link functionality
-              //   },
-              // ),
-              // ListTile(
-              //   leading: Container(decoration: BoxDecoration(
-              //     shape: BoxShape.circle,
-              //     color: Colors.grey[900],
-              //   ),child: Icon(Icons.speed, color: Colors.white,)),
-              //   title: Text('Speed'),
-              //   onTap: () {
-              //     // Implement more options functionality
-              //   },
-              // ),
-              // ListTile(
-              //   leading: Container(decoration: BoxDecoration(
-              //     shape: BoxShape.circle,
-              //     color: Colors.grey[900],
-              //   ),child: Icon(Icons.phone_iphone_sharp , color: Colors.white,)),
-              //   title: Text('Compact View'),
-              //   onTap: () {
-              //     // Implement more options functionality
-              //   },
-              // ),
-              // ListTile(
-              //   leading: Container(decoration: BoxDecoration(
-              //     shape: BoxShape.circle,
-              //     color: Colors.grey[900],
-              //   ),child: Icon(CupertinoIcons.arrow_up_square_fill, color: Colors.white,)),
-              //   title: Text('Scroll Automatically'),
-              //   onTap: () {
-              //     // Implement more options functionality
-              //   },
-              // ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   buildProfile(String profilePhoto, String uid) {
-    return SizedBox(
-      width: 60,
-      height: 60,
-      child: Stack(
-        children: [
-          Positioned(
-            left: 5,
-            child: Container(
-              width: 50,
-              height: 50,
-              padding: const EdgeInsets.all(1),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(25),
-                child: Image.network(
-                  profilePhoto,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stacktrace) {
-                    return Container(
-                      color: Colors.grey[300],
-                      child: Icon(Icons.person, color: Colors.grey[600]),
-                    );
-                  },
+    return GestureDetector(
+      onTap:
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => ProfileScreen(uid: uid)),
+          ),
+      child: SizedBox(
+        width: 60,
+        height: 60,
+        child: Stack(
+          children: [
+            Positioned(
+              left: 5,
+              child: Container(
+                width: 50,
+                height: 50,
+                padding: const EdgeInsets.all(1),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(25),
+                  child: Image.network(
+                    profilePhoto,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stacktrace) {
+                      return Container(
+                        color: Colors.grey[300],
+                        child: Icon(Icons.person, color: Colors.grey[600]),
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
-          ),
-          authController.user.uid != uid
-              ? Positioned(
-                bottom: 0,
-                left: 20,
-                child: StreamBuilder<DocumentSnapshot>(
-                  stream:
-                      fireStore
-                          .collection('users')
-                          .doc(uid)
-                          .collection('followers')
-                          .doc(authController.user.uid)
-                          .snapshots(),
-                  builder: (context, snapshot) {
-                    final isFollowing =
-                        snapshot.hasData && snapshot.data!.exists;
-                    return Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: isFollowing ? Colors.white : Colors.red,
-                        borderRadius: BorderRadius.circular(10),
-                        // border: Border.all(color: Colors.white, width: 1),
-                      ),
-                      child: InkWell(
-                        onTap:
-                            () => videoController.toggleFollowUser(
-                              uid,
-                              isFollowing,
+            authController.user.uid != uid
+                ? Positioned(
+                  bottom: 0,
+                  left: 20,
+                  child: StreamBuilder<DocumentSnapshot>(
+                    stream:
+                        fireStore
+                            .collection('users')
+                            .doc(uid)
+                            .collection('followers')
+                            .doc(authController.user.uid)
+                            .snapshots(),
+                    builder: (context, snapshot) {
+                      final isFollowing =
+                          snapshot.hasData && snapshot.data!.exists;
+                      return Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: isFollowing ? Colors.white : Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                          // border: Border.all(color: Colors.white, width: 1),
+                        ),
+                        child: InkWell(
+                          onTap:
+                              () => videoController.toggleFollowUser(
+                                uid,
+                                isFollowing,
+                              ),
+                          child: Center(
+                            child: Icon(
+                              isFollowing ? Icons.check : Icons.add,
+                              size: 15,
+                              color: isFollowing ? Colors.red : Colors.white,
                             ),
-                        child: Center(
-                          child: Icon(
-                            isFollowing ? Icons.check : Icons.add,
-                            size: 15,
-                            color: isFollowing ? Colors.red : Colors.white,
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              )
-              : const SizedBox(),
-        ],
+                      );
+                    },
+                  ),
+                )
+                : const SizedBox(),
+          ],
+        ),
       ),
     );
   }

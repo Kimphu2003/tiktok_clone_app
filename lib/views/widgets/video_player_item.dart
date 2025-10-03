@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:tiktok_clone_app/controllers/video_controller.dart';
+import 'package:tiktok_clone_app/views/widgets/tiktok_bottom_sheet.dart';
 import 'package:video_player/video_player.dart';
 
 
@@ -80,8 +81,12 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
                       ),
                   ],
                 ),
+
+            onLongPress: () => TikTokBottomSheet.showShareBottomSheet(context, widget.videoId),
               )
               : const Center(child: CircularProgressIndicator()),
     );
   }
+
+
 }
