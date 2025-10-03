@@ -75,9 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(width: 15),
                     InkWell(
-                      onTap: () async {
-                        await firebaseAuth.signOut();
-                      },
+                      onTap: () => showProfileBottomSheet(context),
                       child: const Icon(
                         Icons.more_vert,
                         color: Colors.white,
@@ -460,6 +458,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         );
+      },
+    );
+  }
+
+  void showProfileBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.grey[900],
+      builder: (context) {
+        return authController.user.uid == widget.uid
+            ? Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                height: 80,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: () => authController.signOut(),
+                      child: ListTile(
+                        leading: const Icon(
+                          Icons.logout_outlined,
+                          color: Colors.white,
+                        ),
+                        title: const Text(
+                          'Sign Out',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      height: 1,
+                      decoration: BoxDecoration(color: Colors.grey[800]),
+                    ),
+                  ],
+                ),
+              ),
+            )
+            : Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.report, color: Colors.white),
+                  title: const Text(
+                    'Báo cáo',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {},
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.not_interested,
+                    color: Colors.white,
+                  ),
+                  title: const Text(
+                    'Chặn',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {},
+                ),
+              ],
+            );
       },
     );
   }
