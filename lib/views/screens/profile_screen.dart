@@ -98,16 +98,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     ClipOval(
                       child: CachedNetworkImage(
-                            fit: BoxFit.cover,
-                            width: 100,
-                            height: 100,
-                            placeholder:
-                                (context, url) =>
-                                    const CircularProgressIndicator(),
-                            errorWidget:
-                                (context, url, error) =>
-                                    const Icon(Icons.error),
-                            imageUrl: controller.profilePhoto.toString(),
+                        fit: BoxFit.cover,
+                        width: 100,
+                        height: 100,
+                        placeholder:
+                            (context, url) => const CircularProgressIndicator(),
+                        errorWidget:
+                            (context, url, error) => const Icon(Icons.error),
+                        imageUrl: controller.profilePhoto.toString(),
                       ),
                     ),
                     Positioned(
@@ -143,8 +141,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   profileController.user['profilePhoto'] =
                                       imageUrl;
                                   setState(() {
-                                    controller.profilePhoto.value =
-                                        imageUrl;
+                                    controller.profilePhoto.value = imageUrl;
                                   });
                                 }
                               }
@@ -333,10 +330,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           child: Center(
-                            child: Icon(
-                              Icons.person_add_alt,
-                              color: Colors.white,
-                              // size: 22,
+                            child: InkWell(
+                              onTap:
+                                  () => Get.toNamed(
+                                    '/add-friends',
+                                    arguments: {'uid': widget.uid},
+                                  ),
+                              child: Icon(
+                                Icons.person_add_alt,
+                                color: Colors.white,
+                                // size: 22,
+                              ),
                             ),
                           ),
                         ),
@@ -351,7 +355,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         height: 47,
                         child: ElevatedButton(
                           onPressed: () {
-                            controller.followUser();
+                            controller.followUser(controller.user['uid']);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor:

@@ -89,18 +89,18 @@ class ProfileController extends GetxController {
     update();
   }
 
-  followUser() async {
+  Future<void> followUser(String targetUid) async {
     var doc =
         await fireStore
             .collection('users')
-            .doc(_uid.value)
+            .doc(targetUid)
             .collection('followers')
             .doc(authController.user.uid)
             .get();
     if (!doc.exists) {
       await fireStore
           .collection('users')
-          .doc(_uid.value)
+          .doc(targetUid)
           .collection('followers')
           .doc(authController.user.uid)
           .set({});
@@ -119,7 +119,7 @@ class ProfileController extends GetxController {
     } else {
       await fireStore
           .collection('users')
-          .doc(_uid.value)
+          .doc(targetUid)
           .collection('followers')
           .doc(authController.user.uid)
           .delete();
@@ -128,7 +128,7 @@ class ProfileController extends GetxController {
           .collection('users')
           .doc(authController.user.uid)
           .collection('following')
-          .doc(_uid.value)
+          .doc(targetUid)
           .delete();
 
       _user.value.update(
@@ -136,8 +136,23 @@ class ProfileController extends GetxController {
         (value) => (int.parse(value) - 1).toString(),
       );
     }
+
+    if(_uid.value == targetUid) {
+      await getUserData();
+    }
+
     _user.value.update('isFollowing', (value) => !value);
     update();
+  }
+
+  Future<bool> isFollowing(String targetUid) async {
+    var doc = await fireStore
+        .collection('users')
+        .doc(targetUid)
+        .collection('followers')
+        .doc(authController.user.uid)
+        .get();
+    return doc.exists;
   }
 
   editUserProfile(String field, String value) async {

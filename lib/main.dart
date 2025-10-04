@@ -5,6 +5,7 @@ import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/models/video_model.dart';
+import 'package:tiktok_clone_app/views/screens/add_friend_screen.dart';
 import 'package:tiktok_clone_app/views/screens/edit_profile_detail_screen.dart';
 import 'package:tiktok_clone_app/views/screens/edit_profile_screen.dart';
 import 'package:tiktok_clone_app/views/screens/home_screen.dart';
@@ -52,6 +53,8 @@ class MyApp extends StatelessWidget {
           name: '/edit-profile-detail/biography',
           page: () => EditProfileDetailScreen(field: 'Biography'),
         ),
+
+        GetPage(name: '/add-friends', page: () => AddFriendScreen(uid: authController.user.uid,),),
       ],
     );
   }

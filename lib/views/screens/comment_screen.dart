@@ -101,36 +101,39 @@ class _CommentScreenState extends State<CommentScreen> {
                   }),
                 ),
                 const Divider(),
-                ListTile(
-                  title: TextFormField(
-                    controller: controller,
-                    style: const TextStyle(fontSize: 16, color: Colors.white),
-                    decoration: const InputDecoration(
-                      labelText: 'Comment',
-                      labelStyle: TextStyle(
-                        fontSize: 20,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.red),
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.red),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: ListTile(
+                    title: TextFormField(
+                      controller: controller,
+                      style: const TextStyle(fontSize: 16, color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Comment',
+                        labelStyle: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red),
+                        ),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red),
+                        ),
                       ),
                     ),
-                  ),
-                  trailing: TextButton(
-                    onPressed: () async {
-                      await commentController.postComment(controller.text);
-                      controller.clear();
-                    },
-                    child: Text(
-                      'Send',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                    trailing: TextButton(
+                      onPressed: () async {
+                        await commentController.postComment(controller.text);
+                        controller.clear();
+                      },
+                      child: Text(
+                        'Send',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
