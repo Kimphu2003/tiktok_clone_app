@@ -1,10 +1,7 @@
 
-import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
-// import 'package:http/http.dart' as http;
-// import 'constants.dart';
 
 Future<File?> pickImage() async {
   try {
@@ -15,7 +12,7 @@ Future<File?> pickImage() async {
     }
     return null;
   } catch (e) {
-    return null;
+    throw Exception('Error picking image: $e');
   }
 }
 

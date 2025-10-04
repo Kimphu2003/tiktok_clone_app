@@ -175,7 +175,6 @@ class UploadVideoController extends GetxController {
         'createdAt': DateTime.now().toIso8601String(),
       });
     } catch (e) {
-      // Get.snackbar('Error uploading video to Firestore', '$e');
       throw Exception('Error uploading video to Firestore: $e');
     }
   }

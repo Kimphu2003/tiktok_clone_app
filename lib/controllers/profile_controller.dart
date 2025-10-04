@@ -35,9 +35,10 @@ class ProfileController extends GetxController {
         await fireStore.collection('users').doc(_uid.value).get();
     Map<String, dynamic> userData = userDoc.data()! as Map<String, dynamic>;
     username.value = userData['name'];
-    profilePhoto.value =userData['profilePhoto'];
+    profilePhoto.value = userData['profilePhoto'];
     bio.value = userData['bio'];
-    tiktokId.value = userData['name'].toString().toLowerCase().removeAllWhitespace;
+    tiktokId.value =
+        userData['name'].toString().toLowerCase().removeAllWhitespace;
     int likes = 0;
     int followers = 0;
     int following = 0;
@@ -63,12 +64,13 @@ class ProfileController extends GetxController {
             .get();
     following = followingDoc.docs.length;
 
-    var doc = await fireStore
-        .collection('users')
-        .doc(_uid.value)
-        .collection('followers')
-        .doc(authController.user.uid)
-        .get();
+    var doc =
+        await fireStore
+            .collection('users')
+            .doc(_uid.value)
+            .collection('followers')
+            .doc(authController.user.uid)
+            .get();
 
     bool isFollowing = doc.exists;
 
@@ -155,6 +157,11 @@ class ProfileController extends GetxController {
           'bio': value,
         });
         break;
+      case 'profilePhoto':
+        await fireStore.collection('users').doc(_uid.value).update({
+          'profilePhoto': value,
+        });
+        break;
       default:
         break;
     }
@@ -163,6 +170,8 @@ class ProfileController extends GetxController {
           ? 'name'
           : field == 'Biography'
           ? 'bio'
+          : field == 'profilePhoto'
+          ? 'profilePhoto'
           : 'TikTok ID',
       (value) => value = value,
     );

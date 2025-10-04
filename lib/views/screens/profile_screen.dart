@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +12,7 @@ import 'package:tiktok_clone_app/views/screens/edit_profile_screen.dart';
 import 'package:tiktok_clone_app/views/widgets/custom_tab_bar.dart';
 
 import '../../utils.dart';
+import 'avatar_select_page.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String uid;
@@ -94,18 +97,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   clipBehavior: Clip.none,
                   children: [
                     ClipOval(
-                      child: Obx(
-                        () => CachedNetworkImage(
-                          fit: BoxFit.cover,
-                          width: 100,
-                          height: 100,
-                          placeholder:
-                              (context, url) =>
-                                  const CircularProgressIndicator(),
-                          errorWidget:
-                              (context, url, error) => const Icon(Icons.error),
-                          imageUrl: controller.profilePhoto.toString(),
-                        ),
+                      child: CachedNetworkImage(
+                            fit: BoxFit.cover,
+                            width: 100,
+                            height: 100,
+                            placeholder:
+                                (context, url) =>
+                                    const CircularProgressIndicator(),
+                            errorWidget:
+                                (context, url, error) =>
+                                    const Icon(Icons.error),
+                            imageUrl: controller.profilePhoto.toString(),
                       ),
                     ),
                     Positioned(
@@ -122,14 +124,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onTap: () async {
                             final pickedImage = await pickImage();
                             if (pickedImage != null) {
-                              final imageUrl =
-                                  await UploadVideoController.uploadToCloudinary(
-                                    pickedImage,
-                                    'profile_images',
-                                  );
-                              if (imageUrl != null) {
-                                profileController.user['profilePhoto'] =
-                                    imageUrl;
+                              final croppedImage = await Navigator.push<File?>(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => AvatarSelectPage(
+                                        imageFile: pickedImage,
+                                      ),
+                                ),
+                              );
+                              if (croppedImage != null) {
+                                final imageUrl =
+                                    await UploadVideoController.uploadToCloudinary(
+                                      croppedImage,
+                                      'image',
+                                    );
+                                if (imageUrl != null) {
+                                  profileController.user['profilePhoto'] =
+                                      imageUrl;
+                                  setState(() {
+                                    controller.profilePhoto.value =
+                                        imageUrl;
+                                  });
+                                }
                               }
                             }
                           },

@@ -1,5 +1,6 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone_app/constants.dart';
@@ -7,6 +8,7 @@ import 'package:tiktok_clone_app/controllers/upload_video_controller.dart';
 
 import '../../controllers/profile_controller.dart';
 import '../../utils.dart';
+import 'avatar_select_page.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -49,6 +51,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 return const Center(child: Text('Something went wrong'));
               }
               final userData = snapshot.data!.data() as Map<String, dynamic>;
+              final profilePhoto = userData['profilePhoto'];
               return Column(
                 children: [
                   Center(
@@ -56,18 +59,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       clipBehavior: Clip.none,
                       children: [
                         ClipOval(
-                          child: CachedNetworkImage(
-                            fit: BoxFit.cover,
-                            width: 100,
-                            height: 100,
-                            placeholder:
-                                (context, url) =>
-                                    const CircularProgressIndicator(),
-                            errorWidget:
-                                (context, url, error) =>
-                                    const Icon(Icons.error),
-                            imageUrl: userData['profilePhoto'],
-                          ),
+                          child: (profilePhoto == null || profilePhoto.isEmpty) ?
+                            Image.network(
+                              defaultProfilePhoto,
+                              fit: BoxFit.cover,
+                              width: 100,
+                              height: 100,
+                            ) :
+                              profilePhoto.startsWith(
+                                    'http',
+                                  )
+                                  ? CachedNetworkImage(
+                                    fit: BoxFit.cover,
+                                    width: 100,
+                                    height: 100,
+                                    placeholder:
+                                        (context, url) =>
+                                            const CircularProgressIndicator(),
+                                    errorWidget:
+                                        (context, url, error) =>
+                                            const Icon(Icons.error),
+                                    imageUrl:
+                                        profileController.profilePhoto.value,
+                                  )
+                                  : Image.file(
+                                    File(userData['profilePhoto']),
+                                    fit: BoxFit.cover,
+                                    width: 100,
+                                    height: 100,
+                                  ),
                         ),
                         Positioned(
                           right: -5,
@@ -84,11 +104,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               onTap: () async {
                                 final pickedImage = await pickImage();
                                 if (pickedImage != null) {
-                                  final imageUrl = await UploadVideoController.uploadToCloudinary(pickedImage, 'profile_images');
-                                  if (imageUrl != null) {
-                                    setState(() {
-                                      userData['profilePhoto'] = imageUrl;
-                                    });
+                                  final croppedImage =
+                                      await Navigator.push<File?>(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) => AvatarSelectPage(
+                                                imageFile: pickedImage,
+                                              ),
+                                        ),
+                                      );
+                                  if (croppedImage != null) {
+                                    final imageUrl =
+                                        await UploadVideoController.uploadToCloudinary(
+                                          croppedImage,
+                                          'image',
+                                        );
+                                    if (imageUrl != null) {
+                                      profileController.editUserProfile('profilePhoto', imageUrl);
+                                      setState(() {
+                                        profileController.profilePhoto.value = imageUrl;
+                                      });
+                                    }
                                   }
                                 }
                               },
@@ -140,9 +177,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             onTap:
                                 () => Get.toNamed(
                                   '/edit-profile-detail/profile-name',
-                                  arguments: {
-                                    'value': userData['name'],
-                                  },
+                                  arguments: {'value': userData['name']},
                                 ),
                             child: Container(
                               width: size.width * 0.9,
