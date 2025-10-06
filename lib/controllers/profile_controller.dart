@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone_app/constants.dart';
 
@@ -14,13 +15,77 @@ class ProfileController extends GetxController {
   final Rx<String> bio = ''.obs;
   final Rx<String> tiktokId = ''.obs;
 
+  final RxList<String> personalVideoThumbnails = <String>[].obs;
+  final RxList<String> personalVideos = <String>[].obs;
+
+  final RxList<String> favoriteVideoThumbnails = <String>[].obs;
+  final RxList<String> favoriteVideos = <String>[].obs;
+
+  final RxList<String> likedVideoThumbnails = <String>[].obs;
+  final RxList<String> likedVideos = <String>[].obs;
+
+  Future<void> getPersonalVideos(String uid) async {
+    personalVideos.clear();
+    personalVideoThumbnails.clear();
+
+    var videos = await fireStore.collection('videos').where('uid', isEqualTo: uid).get();
+
+    for(var doc in videos.docs) {
+      var data = doc.data();
+      personalVideos.add(doc.id);
+      personalVideoThumbnails.add(data['thumbnail']);
+    }
+  }
+
+  Future<void> getFavoriteVideos(String uid) async {
+    favoriteVideoThumbnails.clear();
+    favoriteVideos.clear();
+
+    var userDoc = await fireStore.collection('users').doc(uid).get();
+
+    if(userDoc.exists) {
+      Map<String, dynamic> userData = userDoc.data()!;
+      List<dynamic> favorites = userData['favoriteVideos'] ?? [];
+      final futures = favorites.map((videoId) async {
+        var videoDoc = await fireStore.collection('videos').doc(videoId).get();
+        if(videoDoc.exists) {
+          var data = videoDoc.data()!;
+          favoriteVideos.add(videoId);
+          favoriteVideoThumbnails.add(data['thumbnail']);
+        }
+      });
+      await Future.wait(futures);
+    }
+    debugPrint('favoriteVideos: ${favoriteVideoThumbnails.length}');
+  }
+
+  Future<void> getLikedVideos(String uid) async {
+    likedVideos.clear();
+    likedVideoThumbnails.clear();
+
+    var videos = await fireStore
+        .collection('videos')
+        .where('likes', arrayContains: uid)
+        .get();
+
+    for(var doc in videos.docs) {
+      var data = doc.data();
+      likedVideos.add(doc.id);
+      likedVideoThumbnails.add(data['thumbnail']);
+    }
+  }
+
   updateUserId(String uid) {
     _uid.value = uid;
     getUserData();
+    getPersonalVideos(uid);
+    getFavoriteVideos(uid);
+    getLikedVideos(uid);
   }
 
-  getUserData() async {
+  Future<void> getUserData() async {
     List<String> thumbnails = [];
+
     var myVideos =
         await fireStore
             .collection('videos')
@@ -85,6 +150,7 @@ class ProfileController extends GetxController {
       'uid': _uid.value,
       'bio': bio.value,
       'tiktokId': tiktokId.value,
+      'favoriteVideos': favoriteVideoThumbnails,
     };
     update();
   }

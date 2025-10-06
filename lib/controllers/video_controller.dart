@@ -35,7 +35,7 @@ class VideoController extends GetxController {
     _loadUserFavoriteVideos();
   }
 
-  _loadUserFavoriteVideos() async {
+  Future<void> _loadUserFavoriteVideos() async {
     String uid = firebaseAuth.currentUser!.uid;
     fireStore.collection('users').doc(uid).snapshots().listen((doc) {
       if (doc.exists) {
@@ -44,26 +44,6 @@ class VideoController extends GetxController {
         totalFavoriteCount.value = _favoriteVideoIds.length;
       }
     });
-  }
-
-  Future<List<String>> getUsersFollowings(String uid) async {
-    try {
-      DocumentSnapshot userDoc =
-          await fireStore.collection('users').doc(uid).get();
-      if (userDoc.exists) {
-        QuerySnapshot followingSnapshot =
-            await fireStore
-                .collection('users')
-                .doc(uid)
-                .collection('following')
-                .get();
-        List<String> followerList = followingSnapshot.docs.map((doc) => doc.id).toList();
-        return followerList;
-      }
-      throw Exception('Error getting user followers: User document does not exist');
-    } catch (e) {
-      throw Exception('Error getting user followers: $e');
-    }
   }
 
   Future<void> likeVideo(String videoId) async {
@@ -122,7 +102,7 @@ class VideoController extends GetxController {
     return _favoriteVideoIds.contains(videoId);
   }
 
-  toggleFavoriteVideo(String videoId) async {
+  Future<void> toggleFavoriteVideo(String videoId) async {
     try {
       String uid = authController.user.uid;
       final isFavorite = isVideoFavorited(videoId);
@@ -145,7 +125,7 @@ class VideoController extends GetxController {
     }
   }
 
-  _updateVideoFavoriteCount(String videoId, bool isFavorite) async {
+  Future<void> _updateVideoFavoriteCount(String videoId, bool isFavorite) async {
     try {
       final int change = isFavorite ? -1 : 1;
       await fireStore.collection('videos').doc(videoId).update({

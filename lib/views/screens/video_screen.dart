@@ -22,7 +22,7 @@ class VideoScreen extends StatefulWidget {
 
 class _VideoScreenState extends State<VideoScreen> {
   final VideoController videoController = Get.put(VideoController());
-  final PageController _pageController = PageController();
+  final PageController _pageController = PageController(initialPage: 1);
   List<String> currentUserFollowers = [];
 
   int _selectedIndex = 1;
@@ -35,15 +35,15 @@ class _VideoScreenState extends State<VideoScreen> {
 
   Future<void> fetchCurrentUserFollowers() async {
     try {
-      final QuerySnapshot snapshot = await fireStore
-          .collection('users')
-          .doc(authController.user.uid)
-          .collection('followers')
-          .get();
-      if(snapshot.docs.isNotEmpty) {
+      final QuerySnapshot snapshot =
+          await fireStore
+              .collection('users')
+              .doc(authController.user.uid)
+              .collection('followers')
+              .get();
+      if (snapshot.docs.isNotEmpty) {
         setState(() {
-          currentUserFollowers =
-              snapshot.docs.map((doc) => doc.id).toList();
+          currentUserFollowers = snapshot.docs.map((doc) => doc.id).toList();
         });
       }
     } catch (e) {
@@ -133,6 +133,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
   Widget _buildTab(String tab, int index) {
     final isSelected = _selectedIndex == index;
+    debugPrint('isSelected: $isSelected for tab: $tab');
     return GestureDetector(
       onTap: () {
         setState(() => _onTabTapped(index));
@@ -169,12 +170,12 @@ class _VideoScreenState extends State<VideoScreen> {
     return Obx(() {
       final allVideos = videoController.videoList;
       final filteredVideos =
-          label == 'Following'
+          label == 'For You'
               ? allVideos
+              : allVideos
                   .where((video) => currentUserFollowers.contains(video.uid))
-                  .toList()
-              : allVideos;
-      if (_selectedIndex == 1 && currentUserFollowers.isEmpty) {
+                  .toList();
+      if (_selectedIndex == 1 && filteredVideos.isEmpty) {
         return const Center(child: CircularProgressIndicator());
       }
       return PageView.builder(
