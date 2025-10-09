@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone_app/constants.dart';
@@ -22,7 +21,6 @@ class AuthController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-    // _user = Rx<User?>(firebaseAuth.currentUser);
     _user.bindStream(firebaseAuth.authStateChanges());
     ever(_user, _setInitialScreen);
   }
@@ -50,7 +48,7 @@ class AuthController extends GetxController {
 
       final String? imageUrl = await UploadVideoController.uploadToCloudinary(
         selectedImage,
-        'profile_images',
+        'image',
       );
 
       return imageUrl;
@@ -193,8 +191,6 @@ class AuthController extends GetxController {
         email: email,
         password: password,
       );
-
-      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen()));
 
       Get.back();
     } catch (e) {

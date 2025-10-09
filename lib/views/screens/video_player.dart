@@ -24,18 +24,35 @@ class VideoPlayer extends StatefulWidget {
 }
 
 class _VideoPlayerState extends State<VideoPlayer> {
-  final ProfileController profileController = Get.put(ProfileController());
-  final VideoController videoController = Get.put(VideoController());
+  final ProfileController profileController = Get.find();
+  final VideoController videoController = Get.find();
+
+  final TikTokBottomSheet tiktokBottomSheet = TikTokBottomSheet();
+  late ValueNotifier<double> downloadProgress;
+  late ValueNotifier<bool> compactModeNotifier;
+  late ValueNotifier<double> speedNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    downloadProgress = ValueNotifier(0.0);
+    compactModeNotifier = ValueNotifier(false);
+    speedNotifier = ValueNotifier(1.0);
+  }
+
+  @override
+  void dispose() {
+    downloadProgress.dispose();
+    compactModeNotifier.dispose();
+    speedNotifier.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Obx(() {
-          // final video = videoController.videoList.firstWhere(
-          //   (vid) => vid.videoId == widget.videoData['videoId'],
-          // );
-          // debugPrint('video id: ${video.videoId}');
           return Stack(
             children: [
               Stack(
@@ -43,6 +60,9 @@ class _VideoPlayerState extends State<VideoPlayer> {
                   VideoPlayerItem(
                     videoUrl: widget.videoData['videoUrl'],
                     videoId: widget.videoData['videoId'],
+                    downloadProgress: downloadProgress,
+                    compactModeNotifier: compactModeNotifier,
+                    speedNotifier: speedNotifier,
                   ),
                   Column(
                     children: [
@@ -186,10 +206,14 @@ class _VideoPlayerState extends State<VideoPlayer> {
                                     icon: Icons.reply,
                                     count: widget.videoData['shareCount'],
                                     onTap:
-                                        () =>
-                                            TikTokBottomSheet.showShareBottomSheet(
+                                        () => tiktokBottomSheet
+                                            .showShareBottomSheet(
                                               context,
                                               widget.videoData['videoId'],
+                                              widget.videoData['videoUrl'],
+                                              downloadProgress,
+                                              compactModeNotifier,
+                                              speedNotifier,
                                             ),
                                   ),
                                   const SizedBox(height: 20),
@@ -276,6 +300,24 @@ class _VideoPlayerState extends State<VideoPlayer> {
                         ],
                       ),
                     ),
+                  ),
+                  ValueListenableBuilder<double>(
+                    valueListenable: downloadProgress,
+                    builder: (context, progress, _) {
+                      if (progress == 0.0 || progress == 1.0) {
+                        return const SizedBox();
+                      }
+                      return Positioned(
+                        bottom: 100,
+                        left: 0,
+                        right: 0,
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          color: Colors.white,
+                          backgroundColor: Colors.grey,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

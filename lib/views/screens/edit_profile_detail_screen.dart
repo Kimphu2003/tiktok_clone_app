@@ -8,7 +8,7 @@ class EditProfileDetailScreen extends StatelessWidget {
 
   EditProfileDetailScreen({super.key, required this.field});
 
-  final ProfileController profileController = Get.put(ProfileController());
+  final ProfileController profileController = Get.find();
 
   final value = Get.arguments['value'].toString();
   final TextEditingController _controller = TextEditingController();
@@ -53,15 +53,6 @@ class EditProfileDetailScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              // Builder(builder: (context) {
-              //   final value = _controller.text;
-              //   return Text(
-              //     field == 'Biography'
-              //         ? '${value.length} / 150'
-              //         : '${value.length} / 30',
-              //     style: const TextStyle(fontSize: 13, color: Colors.white70),
-              //   );
-              // }),
               const SizedBox(height: 10),
               switch (field) {
                 'TikTok ID' => Text(

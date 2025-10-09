@@ -14,7 +14,7 @@ class AddFriendScreen extends StatefulWidget {
 }
 
 class _AddFriendScreenState extends State<AddFriendScreen> {
-  final ProfileController profileController = Get.put(ProfileController());
+  final ProfileController profileController = Get.find();
   final TextEditingController _searchController = TextEditingController();
   bool isSearching = false;
   List<QueryDocumentSnapshot> searchResults = [];

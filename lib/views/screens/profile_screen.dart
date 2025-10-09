@@ -24,7 +24,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  ProfileController profileController = Get.put(ProfileController());
+  ProfileController profileController = Get.find();
 
   @override
   void initState() {

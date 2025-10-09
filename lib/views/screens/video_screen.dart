@@ -1,5 +1,5 @@
-import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -8,10 +8,10 @@ import 'package:tiktok_clone_app/views/screens/comment_screen.dart';
 import 'package:tiktok_clone_app/views/screens/profile_screen.dart';
 import 'package:tiktok_clone_app/views/screens/search_screen.dart';
 import 'package:tiktok_clone_app/views/widgets/circle_animation.dart';
-import 'package:tiktok_clone_app/views/widgets/tiktok_bottom_sheet.dart';
 import 'package:tiktok_clone_app/views/widgets/video_player_item.dart';
 import 'package:get/get.dart';
 import '../../controllers/video_controller.dart';
+import '../widgets/tiktok_bottom_sheet.dart';
 
 class VideoScreen extends StatefulWidget {
   const VideoScreen({super.key});
@@ -21,16 +21,41 @@ class VideoScreen extends StatefulWidget {
 }
 
 class _VideoScreenState extends State<VideoScreen> {
-  final VideoController videoController = Get.put(VideoController());
+  final VideoController videoController = Get.find();
   final PageController _pageController = PageController(initialPage: 1);
+  final TikTokBottomSheet tiktokBottomSheet = TikTokBottomSheet();
+
   List<String> currentUserFollowers = [];
 
   int _selectedIndex = 1;
 
+  late ValueNotifier<double> downloadProgress;
+  late ValueNotifier<bool> isCompactMode;
+  late ValueNotifier<double> speedNotifier;
+
   @override
   void initState() {
     super.initState();
+    downloadProgress = ValueNotifier(0.0);
+    isCompactMode = ValueNotifier(false);
+    speedNotifier = ValueNotifier(1.0);
+
+    isCompactMode.addListener(() {
+      debugPrint('Compact mode changed: ${isCompactMode.value}');
+    });
+
+    // speedNotifier.addListener((listener) {
+    //
+    // });
+
     fetchCurrentUserFollowers();
+  }
+
+  @override
+  void dispose() {
+    downloadProgress.dispose();
+    isCompactMode.dispose();
+    super.dispose();
   }
 
   Future<void> fetchCurrentUserFollowers() async {
@@ -186,7 +211,13 @@ class _VideoScreenState extends State<VideoScreen> {
           final data = filteredVideos[index];
           return Stack(
             children: [
-              VideoPlayerItem(videoUrl: data.videoUrl, videoId: data.videoId),
+              VideoPlayerItem(
+                videoUrl: data.videoUrl,
+                videoId: data.videoId,
+                downloadProgress: downloadProgress,
+                compactModeNotifier: isCompactMode,
+                speedNotifier: speedNotifier,
+              ),
               Column(
                 children: [
                   const SizedBox(height: 100),
@@ -249,85 +280,153 @@ class _VideoScreenState extends State<VideoScreen> {
                             ),
                           ),
                         ),
-                        Container(
-                          width: 100,
-                          margin: EdgeInsets.only(top: size.height / 5),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              buildProfile(data.profilePhoto, data.uid),
-                              const SizedBox(height: 20),
-                              _buildActionButton(
-                                icon: Icons.favorite,
-                                count: data.likes.length,
-                                color:
-                                    data.likes.contains(authController.user.uid)
-                                        ? Colors.red
-                                        : Colors.white,
-                                onTap:
-                                    () =>
-                                        videoController.likeVideo(data.videoId),
+                        ValueListenableBuilder(
+                          valueListenable: isCompactMode,
+                          builder: (context, bool isCompact, _) {
+                            return isCompact
+                                ? Container(
+                              width: 100,
+                              margin: EdgeInsets.only(
+                                top: size.height / 6.5,
                               ),
-                              const SizedBox(height: 20),
-                              _buildActionButton(
-                                icon: Icons.comment_rounded,
-                                count: data.commentCount,
-                                onTap:
-                                    () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (_) => CommentScreen(
-                                              videoId: data.videoId,
-                                            ),
+                              child: Stack(
+                                  children: [
+                                    Positioned(
+                                      bottom: 20,
+                                      right: 10,
+                                      child: Container(
+                                        width: 45,
+                                        height: 45,
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.3),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: InkWell(
+                                          onTap: () {
+                                            setState(() {
+                                              isCompactMode.value = false;
+                                            });
+                                          },
+                                          child: const Icon(
+                                            Icons.phone_android_outlined,
+                                            color: Colors.white,
+                                          ),
+                                        ),
                                       ),
                                     ),
-                              ),
-                              const SizedBox(height: 20),
-                              Obx(() {
-                                return _buildActionButton(
-                                  icon:
-                                      videoController.isVideoFavorited(
-                                            data.videoId,
-                                          )
-                                          ? Icons.bookmark
-                                          : Icons.bookmark_border,
-                                  count: data.favoriteCount,
-                                  color:
-                                      videoController.isVideoFavorited(
-                                            data.videoId,
-                                          )
-                                          ? Colors.yellow
-                                          : Colors.white,
-                                  onTap:
-                                      () => videoController.toggleFavoriteVideo(
-                                        data.videoId,
+                                  ],
+                                ), )
+                                : Container(
+                                  width: 100,
+                                  margin: EdgeInsets.only(
+                                    top: size.height / 6.5,
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      buildProfile(data.profilePhoto, data.uid),
+                                      const SizedBox(height: 20),
+                                      _buildActionButton(
+                                        icon: Icons.favorite,
+                                        count: data.likes.length,
+                                        color:
+                                            data.likes.contains(
+                                                  authController.user.uid,
+                                                )
+                                                ? Colors.red
+                                                : Colors.white,
+                                        onTap:
+                                            () => videoController.likeVideo(
+                                              data.videoId,
+                                            ),
                                       ),
+                                      const SizedBox(height: 20),
+                                      _buildActionButton(
+                                        icon: Icons.comment_rounded,
+                                        count: data.commentCount,
+                                        onTap:
+                                            () => Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) => CommentScreen(
+                                                      videoId: data.videoId,
+                                                    ),
+                                              ),
+                                            ),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      Obx(() {
+                                        return _buildActionButton(
+                                          icon:
+                                              videoController.isVideoFavorited(
+                                                    data.videoId,
+                                                  )
+                                                  ? Icons.bookmark
+                                                  : Icons.bookmark_border,
+                                          count: data.favoriteCount,
+                                          color:
+                                              videoController.isVideoFavorited(
+                                                    data.videoId,
+                                                  )
+                                                  ? Colors.yellow
+                                                  : Colors.white,
+                                          onTap:
+                                              () => videoController
+                                                  .toggleFavoriteVideo(
+                                                    data.videoId,
+                                                  ),
+                                        );
+                                      }),
+                                      const SizedBox(height: 20),
+                                      _buildActionButton(
+                                        icon: Icons.reply,
+                                        count: data.shareCount,
+                                        onTap:
+                                            () => tiktokBottomSheet
+                                                .showShareBottomSheet(
+                                                  context,
+                                                  data.videoId,
+                                                  data.videoUrl,
+                                                  downloadProgress,
+                                                  isCompactMode,
+                                                  speedNotifier,
+                                                ),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      CircleAnimation(
+                                        child: buildMusicAlbum(data.thumbnail!),
+                                      ),
+                                      const SizedBox(height: 10),
+                                    ],
+                                  ),
                                 );
-                              }),
-                              const SizedBox(height: 20),
-                              _buildActionButton(
-                                icon: Icons.reply,
-                                count: data.shareCount,
-                                onTap:
-                                    () =>
-                                        TikTokBottomSheet.showShareBottomSheet(
-                                          context,
-                                          data.videoId,
-                                        ),
-                              ),
-                              const SizedBox(height: 20),
-                              CircleAnimation(
-                                child: buildMusicAlbum(data.thumbnail!),
-                              ),
-                            ],
-                          ),
+                          },
                         ),
                       ],
                     ),
                   ),
                 ],
+              ),
+              ValueListenableBuilder<double>(
+                valueListenable: downloadProgress,
+                builder: (context, progress, _) {
+                  if (progress == 0.0 || progress == 1.0) {
+                    return const SizedBox();
+                  }
+                  return Positioned(
+                    bottom: 100,
+                    left: 0,
+                    right: 0,
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      color: Colors.white,
+                      backgroundColor: Colors.grey.shade900,
+                    ),
+                  );
+                },
               ),
             ],
           );
@@ -422,10 +521,6 @@ class _VideoScreenState extends State<VideoScreen> {
   }
 
   buildMusicAlbum(String thumbnail) {
-    final file = File(thumbnail);
-    if (!file.existsSync()) {
-      return const SizedBox();
-    }
     return SizedBox(
       height: 60,
       width: 60,
@@ -445,7 +540,7 @@ class _VideoScreenState extends State<VideoScreen> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(25),
-              child: Image.file(file, fit: BoxFit.cover),
+              child: CachedNetworkImage(imageUrl: thumbnail, fit: BoxFit.cover),
             ),
           ),
         ],

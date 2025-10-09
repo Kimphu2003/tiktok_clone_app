@@ -16,19 +16,9 @@ class CustomTabBar extends StatefulWidget {
 }
 
 class _CustomTabBarState extends State<CustomTabBar> {
-  final ProfileController profileController = Get.put(ProfileController());
+  final ProfileController profileController = Get.find();
 
-  final VideoController videoController = Get.put(VideoController());
-
-  // late Future<void> _favoriteVideosFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    // _favoriteVideosFuture = profileController.getFavoriteVideos(
-    //   widget.userData['uid'],
-    // );
-  }
+  final VideoController videoController = Get.find();
 
   @override
   Widget build(BuildContext context) {
