@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/views/widgets/custom_add_icon.dart';
+import 'package:tiktok_clone_app/views/screens/add_friend_screen.dart';
+import 'package:tiktok_clone_app/views/screens/add_video_screen.dart';
+import 'package:tiktok_clone_app/views/screens/profile_screen.dart';
+import 'package:tiktok_clone_app/views/screens/search_screen.dart';
+import 'package:tiktok_clone_app/views/screens/video_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,6 +16,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _pageIndex = 0;
+
+  List<Widget> pages = [
+    VideoScreen(),
+    SearchScreen(),
+    const AddVideoScreen(),
+    AddFriendScreen(uid: authController.user.uid),
+    ProfileScreen(uid: authController.user.uid),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +49,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
-      body: pages[_pageIndex],
+      body: IndexedStack(
+        index: _pageIndex,
+        children: pages,
+      ),
     );
   }
 }

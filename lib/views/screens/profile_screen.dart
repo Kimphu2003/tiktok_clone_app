@@ -24,7 +24,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  ProfileController profileController = Get.find();
+  final ProfileController profileController = Get.find<ProfileController>();
 
   @override
   void initState() {
@@ -35,7 +35,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<ProfileController>(
-      init: ProfileController(),
       builder: (controller) {
         if (controller.user.isEmpty) {
           return const Center(child: CircularProgressIndicator());
@@ -106,6 +105,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         errorWidget:
                             (context, url, error) => const Icon(Icons.error),
                         imageUrl: controller.profilePhoto.toString(),
+                        memCacheHeight: 200,
+                        memCacheWidth: 200,
                       ),
                     ),
                     Positioned(
@@ -425,7 +426,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
               const SizedBox(height: 10),
-              GestureDetector(
+              widget.uid != authController.user.uid ? GestureDetector(
                 onTap:
                     () => Get.toNamed(
                       '/edit-profile-detail/biography',
@@ -446,7 +447,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   );
                 }),
-              ),
+              ) : const SizedBox(),
               widget.uid == authController.user.uid
                   ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -469,7 +470,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
                   )
-                  : const SizedBox(),
+                  : const SizedBox(height: 8,),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
