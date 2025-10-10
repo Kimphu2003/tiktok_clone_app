@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/controllers/upload_video_controller.dart';
@@ -27,7 +28,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: const Text(
-          'Edit Profile',
+          'Sửa hồ sơ',
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -59,16 +60,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       clipBehavior: Clip.none,
                       children: [
                         ClipOval(
-                          child: (profilePhoto == null || profilePhoto.isEmpty) ?
-                            Image.network(
-                              defaultProfilePhoto,
-                              fit: BoxFit.cover,
-                              width: 100,
-                              height: 100,
-                            ) :
-                              profilePhoto.startsWith(
-                                    'http',
+                          child:
+                              (profilePhoto == null || profilePhoto.isEmpty)
+                                  ? Image.network(
+                                    defaultProfilePhoto,
+                                    fit: BoxFit.cover,
+                                    width: 100,
+                                    height: 100,
                                   )
+                                  : profilePhoto.startsWith('http')
                                   ? CachedNetworkImage(
                                     fit: BoxFit.cover,
                                     width: 100,
@@ -121,9 +121,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                           'image',
                                         );
                                     if (imageUrl != null) {
-                                      profileController.editUserProfile('profilePhoto', imageUrl);
+                                      profileController.editUserProfile(
+                                        'profilePhoto',
+                                        imageUrl,
+                                      );
                                       setState(() {
-                                        profileController.profilePhoto.value = imageUrl;
+                                        profileController.profilePhoto.value =
+                                            imageUrl;
                                       });
                                     }
                                   }
@@ -143,7 +147,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                   const SizedBox(height: 10),
                   const Text(
-                    'Change Profile Photo',
+                    'Thay đổi ảnh hồ sơ',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
@@ -169,7 +173,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Profile name',
+                            'Tên hồ sơ',
                             style: TextStyle(fontSize: 15, color: Colors.grey),
                           ),
                           const SizedBox(height: 10),
@@ -242,16 +246,40 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          Text(
-                            'tiktok.com/@${userData['name']}'.toLowerCase(),
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: Colors.grey,
+                          GestureDetector(
+                            onTap: () {
+                              Clipboard.setData(
+                                ClipboardData(
+                                  text:
+                                      'tiktok.com/@${userData['name']}'
+                                          .toLowerCase(),
+                                ),
+                              );
+                              Get.snackbar(
+                                'Sao chép liên kết hồ sơ',
+                                'Đã sao chép liên kết hồ sơ vào bộ nhớ tạm',
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.grey.shade900,
+                                colorText: Colors.white,
+                              );
+                            },
+                            child: Row(
+                              children: [
+                                Text(
+                                  'tiktok.com/@${userData['name']}'.toLowerCase(),
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                const SizedBox(width: 5,),
+                                const Icon(Icons.copy_sharp, color: Colors.grey, size: 15,),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 20),
                           const Text(
-                            'Biography',
+                            'Tiểu sử',
                             style: TextStyle(fontSize: 15, color: Colors.grey),
                           ),
                           // const SizedBox(height: 15),
@@ -277,7 +305,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 children: [
                                   Text(
                                     userData['bio'].isEmpty
-                                        ? 'Add bio to your profile'
+                                        ? 'Miêu tả bản thân'
                                         : userData['bio'],
                                     style: const TextStyle(
                                       fontSize: 15,

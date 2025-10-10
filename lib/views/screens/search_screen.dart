@@ -19,17 +19,13 @@ class SearchScreen extends StatelessWidget {
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.black,
-          // leading: InkWell(
-          //   onTap: () => Navigator.of(context).pop(),
-          //   child: Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-          // ),
           actions: [
             TextButton(
               onPressed: () {
                 searchController.searchUsers(_searchController.text);
               },
               child: const Text(
-                'Search',
+                'Tìm kiếm',
                 style: TextStyle(
                   color: Colors.red,
                   fontSize: 18,
@@ -42,7 +38,7 @@ class SearchScreen extends StatelessWidget {
             controller: _searchController,
             decoration: InputDecoration(
               filled: false,
-              hintText: 'Search',
+              hintText: 'Tìm kiếm',
               hintStyle: TextStyle(
                 fontSize: 18,
                 color: Colors.grey[400],
@@ -59,7 +55,7 @@ class SearchScreen extends StatelessWidget {
         body:
             searchController.searchedUsers.isEmpty
                 // && searchController.searchedVideos.isEmpty
-                ? const Center(child: Text('No results found'))
+                ? const Center(child: Text('Không có kết quả tìm kiếm'))
                 :
             (searchController.searchedUsers.isNotEmpty) ?
             ListView(
@@ -68,7 +64,7 @@ class SearchScreen extends StatelessWidget {
                       const Padding(
                         padding: EdgeInsets.only(top: 10, left: 10, bottom: 5),
                         child: Text(
-                          'Users',
+                          'Người dùng',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -87,23 +83,6 @@ class SearchScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // if (searchController.searchedVideos.isNotEmpty)
-                    //   const Padding(
-                    //     padding: EdgeInsets.only(top: 20, left: 10, bottom: 5),
-                    //     child: Text(
-                    //       'Videos',
-                    //       style: TextStyle(
-                    //         fontSize: 20,
-                    //         fontWeight: FontWeight.bold,
-                    //       ),
-                    //     ),
-                    //   ),
-                    // ...searchController.searchedVideos.map(
-                    //   (video) => ListTile(
-                    //     leading: const Icon(Icons.music_note),
-                    //     title: Text(video),
-                    //   ),
-                    // ),
                   ],
                 ) : const SizedBox(),
       );

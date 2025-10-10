@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/details', page: () => EditProfileScreen()),
         GetPage(
           name: '/edit-profile-detail/profile-name',
-          page: () => EditProfileDetailScreen(field: 'Profile name'),
+          page: () => EditProfileDetailScreen(field: 'Tên hồ sơ'),
         ),
         GetPage(
           name: '/edit-profile-detail/tiktok-id',
@@ -55,7 +55,7 @@ class MyApp extends StatelessWidget {
         ),
         GetPage(
           name: '/edit-profile-detail/biography',
-          page: () => EditProfileDetailScreen(field: 'Biography'),
+          page: () => EditProfileDetailScreen(field: 'Tiểu sử'),
         ),
 
         GetPage(name: '/add-friends', page: () => AddFriendScreen(uid: authController.user.uid,),),

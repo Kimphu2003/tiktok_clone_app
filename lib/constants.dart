@@ -28,8 +28,8 @@ var authController = AuthController.instance;
 
 // POLICIES
 const String tiktokIdPolicy =
-    'Your TikTok ID can only contain letters, numbers, underscores, and periods. It must be between 2 and 30 characters long. You can only change your TikTok ID once every 30 days.';
+    'TikTok ID chỉ có thể bao gồm chữ cái, chữ số, dấu gạch dưới và dấu chấm. Khi thay đổi TikTok ID, liên kết hồ sơ của bạn cũng sẽ thay đổi.\n\nBạn có thể đổi tên người dùng của mình 30 ngày một lần.';
 
-const String tiktokNamePolicy = 'You can only change your profile name once after 7 days.';
+const String tiktokNamePolicy = 'Bạn chỉ có thể đổi tên hồ sơ của mình 7 ngày một lần.';
 
 const String tiktokBioPolicy = 'Your bio is a great way to let people know who you are and what you do. You can use hashtags and emojis to make it more fun!';

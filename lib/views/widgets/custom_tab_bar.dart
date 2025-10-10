@@ -56,9 +56,10 @@ class _CustomTabBarState extends State<CustomTabBar> {
     personalVideos.clear();
     personalVideoThumbnails.clear();
 
-    var videos = await fireStore.collection('videos').where('uid', isEqualTo: uid).get();
+    var videos =
+        await fireStore.collection('videos').where('uid', isEqualTo: uid).get();
 
-    for(var doc in videos.docs) {
+    for (var doc in videos.docs) {
       var data = doc.data();
       personalVideos.add(doc.id);
       personalVideoThumbnails.add(data['thumbnail']);
@@ -71,12 +72,12 @@ class _CustomTabBarState extends State<CustomTabBar> {
 
     var userDoc = await fireStore.collection('users').doc(uid).get();
 
-    if(userDoc.exists) {
+    if (userDoc.exists) {
       Map<String, dynamic> userData = userDoc.data()!;
       List<dynamic> favorites = userData['favoriteVideos'] ?? [];
       final futures = favorites.map((videoId) async {
         var videoDoc = await fireStore.collection('videos').doc(videoId).get();
-        if(videoDoc.exists) {
+        if (videoDoc.exists) {
           var data = videoDoc.data()!;
           favoriteVideos.add(videoId);
           favoriteVideoThumbnails.add(data['thumbnail']);
@@ -91,12 +92,13 @@ class _CustomTabBarState extends State<CustomTabBar> {
     likedVideos.clear();
     likedVideoThumbnails.clear();
 
-    var videos = await fireStore
-        .collection('videos')
-        .where('likes', arrayContains: uid)
-        .get();
+    var videos =
+        await fireStore
+            .collection('videos')
+            .where('likes', arrayContains: uid)
+            .get();
 
-    for(var doc in videos.docs) {
+    for (var doc in videos.docs) {
       var data = doc.data();
       likedVideos.add(doc.id);
       likedVideoThumbnails.add(data['thumbnail']);
@@ -105,9 +107,8 @@ class _CustomTabBarState extends State<CustomTabBar> {
 
   @override
   Widget build(BuildContext context) {
-
-    if(isLoading) {
-      return Center(child: CircularProgressIndicator(),);
+    if (isLoading) {
+      return Center(child: CircularProgressIndicator());
     }
 
     return widget.userData['uid'] == authController.user.uid
@@ -210,33 +211,46 @@ class _CustomTabBarState extends State<CustomTabBar> {
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
-        itemCount: label == 'personal'
-            ? personalVideoThumbnails.length
-            : label == 'liked'
-            ? likedVideoThumbnails.length
-            : favoriteVideoThumbnails.length,
+        itemCount:
+            label == 'personal'
+                ? personalVideoThumbnails.length
+                : label == 'liked'
+                ? likedVideoThumbnails.length
+                : favoriteVideoThumbnails.length,
         itemBuilder: (context, index) {
-          String thumbnail = label == 'personal'
-              ? personalVideoThumbnails[index]
-              : label == 'liked'
-              ? likedVideoThumbnails[index]
-              : favoriteVideoThumbnails[index];
+          String thumbnail =
+              label == 'personal'
+                  ? personalVideoThumbnails[index]
+                  : label == 'liked'
+                  ? likedVideoThumbnails[index]
+                  : favoriteVideoThumbnails[index];
 
-          final videoId = label == 'personal'
-              ? personalVideos[index]
-              : label == 'liked'
-              ? likedVideos[index]
-              : favoriteVideos[index];
+          final videoId =
+              label == 'personal'
+                  ? personalVideos[index]
+                  : label == 'liked'
+                  ? likedVideos[index]
+                  : favoriteVideos[index];
 
           return GestureDetector(
             onTap: () async {
-              final videoDoc = await fireStore.collection('videos').doc(videoId).get();
+              final videoDoc =
+                  await fireStore.collection('videos').doc(videoId).get();
               if (videoDoc.exists) {
                 final videoData = videoDoc.data()!;
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => VideoPlayer(videoData: videoData),
+                    builder:
+                        (_) => VideoPlayer(
+                          videoData: videoData,
+                          videos:
+                              label == 'favorite'
+                                  ? favoriteVideos
+                                  : label == 'liked'
+                                  ? likedVideos
+                                  : personalVideos,
+                        ),
                   ),
                 );
               }

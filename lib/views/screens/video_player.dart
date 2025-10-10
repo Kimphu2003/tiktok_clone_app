@@ -16,8 +16,9 @@ import 'comment_screen.dart';
 
 class VideoPlayer extends StatefulWidget {
   final Map<String, dynamic> videoData;
+  final List<String> videos;
 
-  const VideoPlayer({super.key, required this.videoData});
+  const VideoPlayer({super.key, required this.videoData, required this.videos});
 
   @override
   State<VideoPlayer> createState() => _VideoPlayerState();
@@ -53,275 +54,285 @@ class _VideoPlayerState extends State<VideoPlayer> {
     return Scaffold(
       body: SafeArea(
         child: Obx(() {
-          return Stack(
-            children: [
-              Stack(
+          return PageView.builder(
+            scrollDirection: Axis.vertical,
+            itemCount: widget.videos.length,
+            itemBuilder: (context, index) {
+              // final videoData = widget.videos[index];
+              return Stack(
                 children: [
-                  VideoPlayerItem(
-                    videoUrl: widget.videoData['videoUrl'],
-                    videoId: widget.videoData['videoId'],
-                    downloadProgress: downloadProgress,
-                    compactModeNotifier: compactModeNotifier,
-                    speedNotifier: speedNotifier,
-                  ),
-                  Column(
+                  Stack(
                     children: [
-                      const SizedBox(height: 100),
-                      Expanded(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Expanded(
-                              child: Container(
-                                margin: const EdgeInsets.only(
-                                  left: 20,
-                                  bottom: 20,
-                                ),
-                                child: Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    InkWell(
-                                      onTap:
-                                          () => Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (_) => ProfileScreen(
-                                                    uid:
-                                                        widget.videoData['uid'],
-                                                  ),
+                      VideoPlayerItem(
+                        videoUrl: widget.videoData['videoUrl'],
+                        videoId: widget.videoData['videoId'],
+                        downloadProgress: downloadProgress,
+                        compactModeNotifier: compactModeNotifier,
+                        speedNotifier: speedNotifier,
+                      ),
+                      Column(
+                        children: [
+                          const SizedBox(height: 100),
+                          Expanded(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    margin: const EdgeInsets.only(
+                                      left: 20,
+                                      bottom: 20,
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        InkWell(
+                                          onTap:
+                                              () => Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder:
+                                                      (_) => ProfileScreen(
+                                                        uid:
+                                                            widget
+                                                                .videoData['uid'],
+                                                      ),
+                                                ),
+                                              ),
+                                          child: Text(
+                                            widget.videoData['username'],
+                                            style: const TextStyle(
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
                                             ),
                                           ),
-                                      child: Text(
-                                        widget.videoData['username'],
-                                        style: const TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                    Text(
-                                      widget.videoData['caption'],
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.music_note,
-                                          size: 15,
-                                          color: Colors.grey,
                                         ),
                                         Text(
-                                          widget.videoData['songName'],
+                                          widget.videoData['caption'],
                                           style: const TextStyle(
                                             fontSize: 18,
                                             color: Colors.grey,
                                           ),
                                         ),
+                                        Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.music_note,
+                                              size: 15,
+                                              color: Colors.grey,
+                                            ),
+                                            Text(
+                                              widget.videoData['songName'],
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ],
                                     ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ),
-                            Container(
-                              width: 100,
-                              margin: EdgeInsets.only(
-                                top: MediaQuery.of(context).size.height / 5,
-                              ),
-                              child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  buildProfile(
-                                    widget.videoData['profilePhoto'],
-                                    widget.videoData['uid'],
+                                Container(
+                                  width: 100,
+                                  margin: EdgeInsets.only(
+                                    top: MediaQuery.of(context).size.height / 5,
                                   ),
-                                  const SizedBox(height: 20),
-                                  _buildActionButton(
-                                    icon: Icons.favorite,
-                                    count: widget.videoData['likes'].length,
-                                    color:
-                                        widget.videoData['likes'].contains(
-                                              authController.user.uid,
-                                            )
-                                            ? Colors.red
-                                            : Colors.white,
-                                    onTap:
-                                        () => videoController.likeVideo(
-                                          widget.videoData['videoId'],
-                                        ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  _buildActionButton(
-                                    icon: Icons.comment_rounded,
-                                    count: widget.videoData['commentCount'],
-                                    onTap:
-                                        () => Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (_) => CommentScreen(
-                                                  videoId:
-                                                      widget
-                                                          .videoData['videoId'],
-                                                ),
-                                          ),
-                                        ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  Obx(() {
-                                    return _buildActionButton(
-                                      icon:
-                                          videoController.isVideoFavorited(
-                                                widget.videoData['videoId'],
-                                              )
-                                              ? Icons.bookmark
-                                              : Icons.bookmark_border,
-                                      count: widget.videoData['favoriteCount'],
-                                      color:
-                                          videoController.isVideoFavorited(
-                                                widget.videoData['videoId'],
-                                              )
-                                              ? Colors.yellow
-                                              : Colors.white,
-                                      onTap:
-                                          () => videoController
-                                              .toggleFavoriteVideo(
-                                                widget.videoData['videoId'],
-                                              ),
-                                    );
-                                  }),
-                                  const SizedBox(height: 20),
-                                  _buildActionButton(
-                                    icon: Icons.reply,
-                                    count: widget.videoData['shareCount'],
-                                    onTap:
-                                        () => tiktokBottomSheet
-                                            .showShareBottomSheet(
-                                              context,
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      buildProfile(
+                                        widget.videoData['profilePhoto'],
+                                        widget.videoData['uid'],
+                                      ),
+                                      const SizedBox(height: 20),
+                                      _buildActionButton(
+                                        icon: Icons.favorite,
+                                        count: widget.videoData['likes'].length,
+                                        color:
+                                            widget.videoData['likes'].contains(
+                                                  authController.user.uid,
+                                                )
+                                                ? Colors.red
+                                                : Colors.white,
+                                        onTap:
+                                            () => videoController.likeVideo(
                                               widget.videoData['videoId'],
-                                              widget.videoData['videoUrl'],
-                                              downloadProgress,
-                                              compactModeNotifier,
-                                              speedNotifier,
                                             ),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      _buildActionButton(
+                                        icon: Icons.comment_rounded,
+                                        count: widget.videoData['commentCount'],
+                                        onTap:
+                                            () => Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) => CommentScreen(
+                                                      videoId:
+                                                          widget
+                                                              .videoData['videoId'],
+                                                    ),
+                                              ),
+                                            ),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      Obx(() {
+                                        return _buildActionButton(
+                                          icon:
+                                              videoController.isVideoFavorited(
+                                                    widget.videoData['videoId'],
+                                                  )
+                                                  ? Icons.bookmark
+                                                  : Icons.bookmark_border,
+                                          count:
+                                              widget.videoData['favoriteCount'],
+                                          color:
+                                              videoController.isVideoFavorited(
+                                                    widget.videoData['videoId'],
+                                                  )
+                                                  ? Colors.yellow
+                                                  : Colors.white,
+                                          onTap:
+                                              () => videoController
+                                                  .toggleFavoriteVideo(
+                                                    widget.videoData['videoId'],
+                                                  ),
+                                        );
+                                      }),
+                                      const SizedBox(height: 20),
+                                      _buildActionButton(
+                                        icon: Icons.reply,
+                                        count: widget.videoData['shareCount'],
+                                        onTap:
+                                            () => tiktokBottomSheet
+                                                .showShareBottomSheet(
+                                                  context,
+                                                  widget.videoData['videoId'],
+                                                  widget.videoData['videoUrl'],
+                                                  downloadProgress,
+                                                  compactModeNotifier,
+                                                  speedNotifier,
+                                                ),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      CircleAnimation(
+                                        child: buildMusicAlbum(
+                                          widget.videoData['thumbnail']!,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 20),
-                                  CircleAnimation(
-                                    child: buildMusicAlbum(
-                                      widget.videoData['thumbnail']!,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  Positioned(
-                    top: 10,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      child: Row(
-                        children: [
-                          InkWell(
-                            onTap: () => Navigator.pop(context),
-                            child: const Icon(
-                              Icons.arrow_back,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              style: const TextStyle(color: Colors.white),
-                              decoration: InputDecoration(
-                                hintText: "Search",
-                                hintStyle: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
                                 ),
-                                border: InputBorder.none,
-                                prefixIcon: const Icon(
-                                  CupertinoIcons.search,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                    color: Colors.white24,
-                                  ),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                    color: Colors.white24,
-                                  ),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => SearchScreen(),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          InkWell(
-                            onTap: () {},
-                            child: const Icon(
-                              Icons.camera_alt_outlined,
-                              color: Colors.white,
+                              ],
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                  ValueListenableBuilder<double>(
-                    valueListenable: downloadProgress,
-                    builder: (context, progress, _) {
-                      if (progress == 0.0 || progress == 1.0) {
-                        return const SizedBox();
-                      }
-                      return Positioned(
-                        bottom: 100,
+                      Positioned(
+                        top: 10,
                         left: 0,
                         right: 0,
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          color: Colors.white,
-                          backgroundColor: Colors.grey,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          child: Row(
+                            children: [
+                              InkWell(
+                                onTap: () => Navigator.pop(context),
+                                child: const Icon(
+                                  Icons.arrow_back,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextField(
+                                  style: const TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    hintText: "Search",
+                                    hintStyle: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                    ),
+                                    border: InputBorder.none,
+                                    prefixIcon: const Icon(
+                                      CupertinoIcons.search,
+                                      color: Colors.white,
+                                      size: 22,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderSide: const BorderSide(
+                                        color: Colors.white24,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: const BorderSide(
+                                        color: Colors.white24,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => SearchScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              InkWell(
+                                onTap: () {},
+                                child: const Icon(
+                                  Icons.camera_alt_outlined,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      );
-                    },
+                      ),
+                      ValueListenableBuilder<double>(
+                        valueListenable: downloadProgress,
+                        builder: (context, progress, _) {
+                          if (progress == 0.0 || progress == 1.0) {
+                            return const SizedBox();
+                          }
+                          return Positioned(
+                            bottom: 100,
+                            left: 0,
+                            right: 0,
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              color: Colors.white,
+                              backgroundColor: Colors.grey,
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           );
         }),
       ),

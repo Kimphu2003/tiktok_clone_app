@@ -169,10 +169,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ClipboardData(text: '@${controller.tiktokId.value}'),
                         );
                         Get.snackbar(
-                          'Copied to Clipboard',
-                          '@${controller.tiktokId.value}',
+                          'Sao chép liên kết hồ sơ',
+                          'Đã sao chép liên kết hồ sơ vào bộ nhớ tạm',
                           snackPosition: SnackPosition.BOTTOM,
-                          backgroundColor: Colors.grey[900],
+                          backgroundColor: Colors.grey.shade900,
                           colorText: Colors.white,
                         );
                       },
@@ -309,7 +309,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           child: const Text(
-                            'Edit profile',
+                            'Sửa hồ sơ',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -438,7 +438,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Obx(() {
                   return Text(
                     controller.bio.value.isEmpty
-                        ? 'Click to add your bio'
+                        ? 'Chạm để thêm tiểu sử'
                         : controller.bio.value,
                     style: TextStyle(
                       fontSize: 15,
@@ -460,7 +460,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       TextButton(
                         onPressed: () {},
                         child: Text(
-                          'Your orders',
+                          'Đơn hàng của bạn',
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w400,

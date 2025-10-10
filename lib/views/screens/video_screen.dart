@@ -111,8 +111,8 @@ class _VideoScreenState extends State<VideoScreen> {
                     ),
                   ),
                   const Divider(),
-                  _buildTab('Following', 0),
-                  _buildTab('For You', 1),
+                  _buildTab('Đang theo dõi', 0),
+                  _buildTab('Dành cho bạn', 1),
                   const Divider(),
                   InkWell(
                     onTap:
@@ -136,8 +136,8 @@ class _VideoScreenState extends State<VideoScreen> {
                 onPageChanged:
                     (index) => setState(() => _selectedIndex = index),
                 children: [
-                  _buildFeed(size, 'Following'),
-                  _buildFeed(size, 'For You'),
+                  _buildFeed(size, 'Đang theo dõi'),
+                  _buildFeed(size, 'Dành cho bạn'),
                 ],
               ),
             ),
@@ -195,7 +195,7 @@ class _VideoScreenState extends State<VideoScreen> {
     return Obx(() {
       final allVideos = videoController.videoList;
       final filteredVideos =
-          label == 'For You'
+          label == 'Dành cho bạn'
               ? allVideos
               : allVideos
                   .where((video) => currentUserFollowers.contains(video.uid))

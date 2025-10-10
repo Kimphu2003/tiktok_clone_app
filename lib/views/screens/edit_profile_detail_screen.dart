@@ -55,9 +55,18 @@ class EditProfileDetailScreen extends StatelessWidget {
               const SizedBox(height: 4),
               const SizedBox(height: 10),
               switch (field) {
-                'TikTok ID' => Text(
-                  tiktokIdPolicy,
-                  style: TextStyle(fontSize: 14, color: Colors.white70),
+                'TikTok ID' => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Liên kết hồ sơ của bạn: www.tiktok.com/@${value.removeAllWhitespace..toLowerCase()}',
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      tiktokIdPolicy,
+                      style: TextStyle(fontSize: 14, color: Colors.white),
+                    ),
+                  ],
                 ),
                 'Profile name' => Text(
                   tiktokNamePolicy,
@@ -86,7 +95,7 @@ class EditProfileDetailScreen extends StatelessWidget {
                   },
                   child: Center(
                     child: Text(
-                      'Save',
+                      'Lưu',
                       style: TextStyle(fontSize: 15, color: Colors.grey[700]),
                     ),
                   ),
