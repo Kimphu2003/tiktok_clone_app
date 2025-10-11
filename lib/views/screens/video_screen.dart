@@ -33,6 +33,7 @@ class _VideoScreenState extends State<VideoScreen> {
   late ValueNotifier<bool> isCompactMode;
   late ValueNotifier<double> speedNotifier;
 
+
   @override
   void initState() {
     super.initState();
@@ -43,10 +44,6 @@ class _VideoScreenState extends State<VideoScreen> {
     isCompactMode.addListener(() {
       debugPrint('Compact mode changed: ${isCompactMode.value}');
     });
-
-    // speedNotifier.addListener((listener) {
-    //
-    // });
 
     fetchCurrentUserFollowers();
   }
@@ -228,7 +225,7 @@ class _VideoScreenState extends State<VideoScreen> {
                       children: [
                         Expanded(
                           child: Container(
-                            margin: const EdgeInsets.only(left: 20, bottom: 20),
+                            margin: const EdgeInsets.only(left: 20, bottom: 50),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,14 +317,15 @@ class _VideoScreenState extends State<VideoScreen> {
                                   width: 100,
                                   margin: EdgeInsets.only(
                                     top: size.height / 6.5,
+                                    bottom: 50,
                                   ),
                                   child: Column(
                                     mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
+                                        MainAxisAlignment.end,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       buildProfile(data.profilePhoto, data.uid),
-                                      const SizedBox(height: 20),
+                                      const SizedBox(height: 10),
                                       _buildActionButton(
                                         icon: Icons.favorite,
                                         count: data.likes.length,
@@ -342,7 +340,7 @@ class _VideoScreenState extends State<VideoScreen> {
                                               data.videoId,
                                             ),
                                       ),
-                                      const SizedBox(height: 20),
+                                      const SizedBox(height: 10),
                                       _buildActionButton(
                                         icon: Icons.comment_rounded,
                                         count: data.commentCount,
@@ -357,7 +355,7 @@ class _VideoScreenState extends State<VideoScreen> {
                                               ),
                                             ),
                                       ),
-                                      const SizedBox(height: 20),
+                                      const SizedBox(height: 10),
                                       Obx(() {
                                         return _buildActionButton(
                                           icon:
@@ -380,7 +378,7 @@ class _VideoScreenState extends State<VideoScreen> {
                                                   ),
                                         );
                                       }),
-                                      const SizedBox(height: 20),
+                                      const SizedBox(height: 10),
                                       _buildActionButton(
                                         icon: Icons.reply,
                                         count: data.shareCount,
@@ -395,7 +393,7 @@ class _VideoScreenState extends State<VideoScreen> {
                                                   speedNotifier,
                                                 ),
                                       ),
-                                      const SizedBox(height: 20),
+                                      const SizedBox(height: 10),
                                       CircleAnimation(
                                         child: buildMusicAlbum(data.thumbnail!),
                                       ),
@@ -410,6 +408,25 @@ class _VideoScreenState extends State<VideoScreen> {
                   ),
                 ],
               ),
+              ValueListenableBuilder<double>(
+                valueListenable: downloadProgress,
+                builder: (context, progress, _) {
+                  if (progress == 0.0 || progress == 1.0) {
+                    return const SizedBox();
+                  }
+                  return Positioned(
+                    bottom: 100,
+                    left: 0,
+                    right: 0,
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      color: Colors.white,
+                      backgroundColor: Colors.grey.shade900,
+                    ),
+                  );
+                },
+              ),
+
               ValueListenableBuilder<double>(
                 valueListenable: downloadProgress,
                 builder: (context, progress, _) {

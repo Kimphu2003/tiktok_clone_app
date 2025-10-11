@@ -29,6 +29,10 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
   VideoController videoController = Get.find();
   final TikTokBottomSheet tiktokBottomSheet = TikTokBottomSheet();
 
+  bool _showControls = false;
+  bool _isDragging = false;
+  bool _isPause = false;
+
   @override
   void initState() {
     super.initState();
@@ -53,8 +57,18 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
             "Video Player Error: ${videoPlayerController.value.errorDescription}",
           );
         }
+        if (!_isDragging) {
+          setState(() {});
+        }
       }
     });
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
   }
 
   @override
@@ -76,13 +90,35 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
                       setState(() {
                         if (videoPlayerController.value.isPlaying) {
                           videoPlayerController.pause();
+                          _isPause = true;
                         } else {
                           videoPlayerController.play();
+                          _isPause = false;
                         }
+                        _showControls = !_showControls;
                       });
+
+                      if (_showControls) {
+                        Future.delayed(Duration(seconds: 3), () {
+                          if (mounted) {
+                            setState(() {
+                              _showControls = false;
+                            });
+                          }
+                        });
+                      }
                     },
                     onDoubleTap:
                         () => videoController.likeVideo(widget.videoId),
+                    onLongPress:
+                        () => tiktokBottomSheet.showShareBottomSheet(
+                          context,
+                          widget.videoId,
+                          widget.videoUrl,
+                          widget.downloadProgress,
+                          widget.compactModeNotifier,
+                          widget.speedNotifier,
+                        ),
                     child: Stack(
                       children: [
                         VideoPlayer(videoPlayerController),
@@ -94,18 +130,128 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
                               size: 100,
                             ),
                           ),
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: AnimatedOpacity(
+                            opacity: _showControls || _isDragging || _isPause ? 1.0 : 0.0,
+                            duration: Duration(milliseconds: 300),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                  colors: [
+                                    Colors.black.withOpacity(0.7),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SliderTheme(
+                                    data: SliderThemeData(
+                                      trackHeight: 3,
+                                      thumbShape: RoundSliderThumbShape(
+                                        enabledThumbRadius: 6,
+                                      ),
+                                      overlayShape: RoundSliderOverlayShape(
+                                        overlayRadius: 14,
+                                      ),
+                                      activeTrackColor: Colors.white,
+                                      inactiveTrackColor: Colors.white
+                                          .withOpacity(0.3),
+                                      thumbColor: Colors.white,
+                                      overlayColor: Colors.white.withOpacity(
+                                        0.2,
+                                      ),
+                                    ),
+                                    child: Slider(
+                                      value:
+                                          videoPlayerController
+                                              .value
+                                              .position
+                                              .inMilliseconds
+                                              .toDouble(),
+                                      min: 0.0,
+                                      max:
+                                          videoPlayerController
+                                              .value
+                                              .duration
+                                              .inMilliseconds
+                                              .toDouble(),
+                                      onChangeStart: (value) {
+                                        setState(() {
+                                          _isDragging = true;
+                                        });
+                                      },
+                                      onChanged: ((value) {
+                                        setState(() {
+                                          videoPlayerController.seekTo(
+                                            Duration(
+                                              milliseconds: value.toInt(),
+                                            ),
+                                          );
+                                        });
+                                      }),
+                                      onChangeEnd: (value) {
+                                        setState(() {
+                                          _isDragging = false;
+                                        });
+                                        videoPlayerController.seekTo(
+                                          Duration(milliseconds: value.toInt()),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          _formatDuration(
+                                            videoPlayerController
+                                                .value
+                                                .position,
+                                          ),
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        Text(
+                                          _formatDuration(
+                                            videoPlayerController
+                                                .value
+                                                .duration,
+                                          ),
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-
-                    onLongPress:
-                        () => tiktokBottomSheet.showShareBottomSheet(
-                          context,
-                          widget.videoId,
-                          widget.videoUrl,
-                          widget.downloadProgress,
-                          widget.compactModeNotifier,
-                          widget.speedNotifier,
-                        ),
                   );
                 },
               )
