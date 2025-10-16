@@ -84,7 +84,7 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
                 valueListenable: widget.speedNotifier,
                 builder: (context, speed, _) {
                   videoPlayerController.setPlaybackSpeed(speed);
-                  debugPrint('Playback speed set to: $speed');
+                  // debugPrint('Playback speed set to: $speed');
                   return GestureDetector(
                     onTap: () {
                       setState(() {

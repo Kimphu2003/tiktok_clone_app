@@ -47,6 +47,9 @@ class VideoModel extends HiveObject {
   @HiveField(13)
   int favoriteCount;
 
+  @HiveField(14)
+  String? soundId;
+
   VideoModel({
     required this.videoId,
     required this.uid,
@@ -62,6 +65,7 @@ class VideoModel extends HiveObject {
     this.profilePhoto = '',
     this.cloudVideoUrl = '',
     this.favoriteCount = 0,
+    this.soundId,
   });
 
   Map<String, dynamic> toJson() {
@@ -80,6 +84,7 @@ class VideoModel extends HiveObject {
       'username': username,
       'cloudVideoUrl': cloudVideoUrl,
       'favoriteCount': favoriteCount,
+      'soundId': soundId,
     };
   }
 
@@ -100,6 +105,7 @@ class VideoModel extends HiveObject {
       profilePhoto: json['profilePhoto'] ?? '',
       cloudVideoUrl: json['cloudVideoUrl'] ?? '',
       favoriteCount: json['favoriteCount'] ?? 0,
+      soundId: json['soundId'] ?? '',
     );
   }
 
@@ -120,6 +126,7 @@ class VideoModel extends HiveObject {
       profilePhoto: snapshot['profilePhoto'] ?? '',
       cloudVideoUrl: snapshot['cloudVideoUrl'] ?? '',
       favoriteCount: snapshot['favoriteCount'] ?? 0,
+      soundId: snapshot['soundId'] ?? '',
     );
   }
 }

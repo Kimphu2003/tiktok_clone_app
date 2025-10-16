@@ -14,6 +14,7 @@ final firebaseAuth = FirebaseAuth.instance;
 final fireStore = FirebaseFirestore.instance;
 
 // CLOUDINARY
+const String apiUrl = 'https://api.cloudinary.com/v1_1/$cloudName';
 const String apiKey = '783255288532875';
 const String cloudName = 'dai3kxqrv';
 const String uploadSecret = 'tzfO3tcwgRQJXiKZT8ztW0AEO2k';

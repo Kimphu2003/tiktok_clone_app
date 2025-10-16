@@ -12,6 +12,7 @@ import 'package:tiktok_clone_app/views/widgets/video_player_item.dart';
 import 'package:get/get.dart';
 import '../../controllers/video_controller.dart';
 import '../widgets/tiktok_bottom_sheet.dart';
+import 'add_test_sounds_screen.dart';
 
 class VideoScreen extends StatefulWidget {
   const VideoScreen({super.key});
@@ -140,6 +141,15 @@ class _VideoScreenState extends State<VideoScreen> {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed:
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => AddTestSoundsScreen()),
+            ),
+        child: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: Colors.red,
       ),
     );
   }
@@ -394,8 +404,13 @@ class _VideoScreenState extends State<VideoScreen> {
                                                 ),
                                       ),
                                       const SizedBox(height: 10),
-                                      CircleAnimation(
-                                        child: buildMusicAlbum(data.thumbnail!),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          CircleAnimation(
+                                            child: buildMusicAlbum(data.thumbnail!),
+                                          ),
+                                        ],
                                       ),
                                       const SizedBox(height: 10),
                                     ],

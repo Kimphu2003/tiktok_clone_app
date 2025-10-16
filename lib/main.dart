@@ -1,10 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/controllers/profile_controller.dart';
+import 'package:tiktok_clone_app/controllers/sound_controller.dart';
 import 'package:tiktok_clone_app/controllers/video_controller.dart';
 import 'package:tiktok_clone_app/models/video_model.dart';
 import 'package:tiktok_clone_app/views/screens/add_friend_screen.dart';
@@ -23,6 +23,8 @@ void main() async {
     Get.put(AuthController());
     Get.put(ProfileController());
     Get.put(VideoController());
+    Get.put(SoundController());
+    Get.put(SoundController());
   });
   await Hive.initFlutter();
   Hive.registerAdapter(VideoModelAdapter());

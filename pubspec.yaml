@@ -55,6 +55,7 @@ dev_dependencies:
   hive_generator: ^2.0.1
   build_runner: ^2.3.3
   flutter_launcher_icons: ^0.14.4
+  audioplayers:
   flutter_test:
     sdk: flutter
 

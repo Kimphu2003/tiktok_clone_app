@@ -6,10 +6,16 @@ import 'package:tiktok_clone_app/views/screens/confirm_screen.dart';
 import '../../constants.dart';
 import '../../utils.dart';
 
-class AddVideoScreen extends StatelessWidget {
+class AddVideoScreen extends StatefulWidget {
   const AddVideoScreen({super.key});
 
-  pickVideo(BuildContext context) async {
+  @override
+  State<AddVideoScreen> createState() => _AddVideoScreenState();
+}
+
+class _AddVideoScreenState extends State<AddVideoScreen> {
+
+  Future<void> pickVideo(BuildContext context) async {
     final video = await pickVideoFromGallery();
 
     if (video != null) {

@@ -185,7 +185,7 @@ class UploadVideoController extends GetxController {
   ) async {
     try {
       final url = Uri.parse(
-        'https://api.cloudinary.com/v1_1/$cloudName/$resourceType/upload',
+        '$apiUrl/$resourceType/upload',
       );
       final request = http.MultipartRequest('POST', url);
 
@@ -213,7 +213,7 @@ class UploadVideoController extends GetxController {
   static Future<String?> uploadImageBytes(Uint8List imageBytes) async {
     try {
       final url = Uri.parse(
-        'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
+        '$apiUrl/image/upload',
       );
       var request = http.MultipartRequest('POST', url);
 

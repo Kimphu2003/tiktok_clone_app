@@ -1,11 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/views/widgets/text_input_field.dart';
 import 'package:video_player/video_player.dart';
 import 'package:get/get.dart';
-
+import '../../controllers/sound_controller.dart';
+import '../../models/sound_model.dart';
+import '../widgets/sound_picker.dart';
 import '../../controllers/upload_video_controller.dart';
 
 class ConfirmScreen extends StatefulWidget {
@@ -30,6 +31,9 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
     UploadVideoController(),
   );
 
+  SoundController soundController = Get.find();
+  Sound? selectedSound;
+
   bool _isSubmitting = false;
 
   @override
@@ -50,53 +54,156 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
     super.dispose();
   }
 
+  void _showSoundPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder:
+          (context) => SoundPickerWidget(
+            onSoundSelected: (sound) {
+              setState(() {
+                selectedSound = sound;
+              });
+              Get.snackbar(
+                'Sound Selected',
+                '${sound.soundName} by ${sound.artistName}',
+                snackPosition: SnackPosition.BOTTOM,
+              );
+            },
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: const Text(
-          'Confirm Video',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          'Upload Video',
+          style: TextStyle(color: Colors.white),
         ),
-        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: 30),
-              SizedBox(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height / 1.5,
-                child: VideoPlayer(controller),
+      body: Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            height: MediaQuery.of(context).size.height / 1.8,
+            child: VideoPlayer(controller),
+          ),
+          Expanded(
+            child: Container(
+              color: Colors.grey[900],
+              child: const Center(
+                child: Text(
+                  'Video Preview',
+                  style: TextStyle(color: Colors.grey),
+                ),
               ),
-              const SizedBox(height: 30),
-              SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      width: MediaQuery.of(context).size.width - 20,
-                      child: TextInputField(
-                        controller: songController,
-                        labelText: 'Song Name',
-                        prefixIcon: Icons.music_note,
+            ),
+          ),
+
+          Container(
+            padding: const EdgeInsets.all(20),
+            color: Colors.grey[900],
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: TextInputField(
+                      controller: captionController,
+                      labelText: 'Caption',
+                      prefixIcon: Icons.closed_caption,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: _showSoundPicker,
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[800]!),
+                      ),
+                      child: Row(
+                        children: [
+                          // Sound Icon or Thumbnail
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[800],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child:
+                                selectedSound?.thumbnailUrl != null
+                                    ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        selectedSound!.thumbnailUrl!,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )
+                                    : const Icon(
+                                      Icons.music_note,
+                                      color: Colors.white,
+                                      size: 30,
+                                    ),
+                          ),
+                          const SizedBox(width: 12),
+              
+                          Expanded(
+                            child:
+                                selectedSound != null
+                                    ? Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          selectedSound!.soundName,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          selectedSound!.artistName,
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                    : const Text(
+                                      'Tap to add sound',
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                          ),
+              
+                          const Icon(Icons.chevron_right, color: Colors.grey),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      width: MediaQuery.of(context).size.width - 20,
-                      child: TextInputField(
-                        controller: captionController,
-                        labelText: 'Caption',
-                        prefixIcon: Icons.closed_caption,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    ElevatedButton(
+                  ),
+              
+                  const SizedBox(height: 10),
+              
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
                       onPressed: () async {
                         if (_isSubmitting) {
                           debugPrint('Already submitting, please wait.');
@@ -105,12 +212,28 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
                         setState(() {
                           _isSubmitting = true;
                         });
-                        await uploadVideoController.uploadVideo(
-                          songController.text.trim(),
-                          captionController.text.trim(),
-                          widget.videoPath,
-                          widget.videoFile,
-                        );
+                        if (selectedSound != null) {
+                          await soundController.incrementSoundUseCount(
+                            selectedSound!.soundId,
+                          );
+              
+                          await uploadVideoController.uploadVideo(
+                            selectedSound!.soundName,
+                            captionController.text,
+                            widget.videoPath,
+                            widget.videoFile,
+                          );
+              
+                          Get.snackbar(
+                            'Posting',
+                            'Video posted with ${selectedSound!.soundName}',
+                          );
+                        } else {
+                          Get.snackbar(
+                            'Select Sound',
+                            'Please select a sound for your video',
+                          );
+                        }
                         setState(() {
                           _isSubmitting = false;
                           debugPrint('Video uploaded completed.');
@@ -118,24 +241,27 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
                         });
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: buttonColor,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 30,
-                          vertical: 10,
+                        backgroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: const Text(
-                        'Share',
-                        style: TextStyle(fontSize: 20, color: Colors.white),
+                        'Post',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
