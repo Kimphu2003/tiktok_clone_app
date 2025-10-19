@@ -1,4 +1,3 @@
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
@@ -7,9 +6,11 @@ import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/views/screens/comment_screen.dart';
 import 'package:tiktok_clone_app/views/screens/profile_screen.dart';
 import 'package:tiktok_clone_app/views/screens/search_screen.dart';
+import 'package:tiktok_clone_app/views/screens/sound_detail_screen.dart';
 import 'package:tiktok_clone_app/views/widgets/circle_animation.dart';
 import 'package:tiktok_clone_app/views/widgets/video_player_item.dart';
 import 'package:get/get.dart';
+import '../../controllers/sound_controller.dart';
 import '../../controllers/video_controller.dart';
 import '../widgets/tiktok_bottom_sheet.dart';
 import 'add_test_sounds_screen.dart';
@@ -23,6 +24,7 @@ class VideoScreen extends StatefulWidget {
 
 class _VideoScreenState extends State<VideoScreen> {
   final VideoController videoController = Get.find();
+  final SoundController soundController = Get.find();
   final PageController _pageController = PageController(initialPage: 1);
   final TikTokBottomSheet tiktokBottomSheet = TikTokBottomSheet();
 
@@ -33,7 +35,6 @@ class _VideoScreenState extends State<VideoScreen> {
   late ValueNotifier<double> downloadProgress;
   late ValueNotifier<bool> isCompactMode;
   late ValueNotifier<double> speedNotifier;
-
 
   @override
   void initState() {
@@ -292,37 +293,40 @@ class _VideoScreenState extends State<VideoScreen> {
                           builder: (context, bool isCompact, _) {
                             return isCompact
                                 ? Container(
-                              width: 100,
-                              margin: EdgeInsets.only(
-                                top: size.height / 6.5,
-                              ),
-                              child: Stack(
-                                  children: [
-                                    Positioned(
-                                      bottom: 20,
-                                      right: 10,
-                                      child: Container(
-                                        width: 45,
-                                        height: 45,
-                                        decoration: BoxDecoration(
-                                          color: Colors.black.withOpacity(0.3),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: InkWell(
-                                          onTap: () {
-                                            setState(() {
-                                              isCompactMode.value = false;
-                                            });
-                                          },
-                                          child: const Icon(
-                                            Icons.phone_android_outlined,
-                                            color: Colors.white,
+                                  width: 100,
+                                  margin: EdgeInsets.only(
+                                    top: size.height / 6.5,
+                                  ),
+                                  child: Stack(
+                                    children: [
+                                      Positioned(
+                                        bottom: 20,
+                                        right: 10,
+                                        child: Container(
+                                          width: 45,
+                                          height: 45,
+                                          decoration: BoxDecoration(
+                                            color: Colors.black.withOpacity(
+                                              0.3,
+                                            ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: InkWell(
+                                            onTap: () {
+                                              setState(() {
+                                                isCompactMode.value = false;
+                                              });
+                                            },
+                                            child: const Icon(
+                                              Icons.phone_android_outlined,
+                                              color: Colors.white,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ), )
+                                    ],
+                                  ),
+                                )
                                 : Container(
                                   width: 100,
                                   margin: EdgeInsets.only(
@@ -330,8 +334,7 @@ class _VideoScreenState extends State<VideoScreen> {
                                     bottom: 50,
                                   ),
                                   child: Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.end,
+                                    mainAxisAlignment: MainAxisAlignment.end,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       buildProfile(data.profilePhoto, data.uid),
@@ -405,10 +408,33 @@ class _VideoScreenState extends State<VideoScreen> {
                                       ),
                                       const SizedBox(height: 10),
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
-                                          CircleAnimation(
-                                            child: buildMusicAlbum(data.thumbnail!),
+                                          GestureDetector(
+                                            onTap: () async {
+                                              final soundId = data.soundId;
+                                              if (soundId != null) {
+                                                final sound =
+                                                    await soundController
+                                                        .getSoundById(soundId);
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder:
+                                                        (_) =>
+                                                            SoundDetailScreen(
+                                                              sound: sound!,
+                                                            ),
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                            child: CircleAnimation(
+                                              child: buildMusicAlbum(
+                                                data.thumbnail!,
+                                              ),
+                                            ),
                                           ),
                                         ],
                                       ),

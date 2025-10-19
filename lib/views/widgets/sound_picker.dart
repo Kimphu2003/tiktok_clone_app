@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/controllers/sound_controller.dart';
 import 'package:tiktok_clone_app/models/sound_model.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -111,6 +112,8 @@ class _SoundPickerWidgetState extends State<SoundPickerWidget> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
+                      _buildQuickTab('All', Icons.music_note),
+                      const SizedBox(width: 12),
                       _buildQuickTab('Trending', Icons.trending_up),
                       const SizedBox(width: 12),
                       _buildQuickTab('Favorites', Icons.favorite),
@@ -164,171 +167,200 @@ class _SoundPickerWidgetState extends State<SoundPickerWidget> {
                     );
                   }
 
-                  return SingleChildScrollView(
-                    child: ListView.builder(
-                      controller: scrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: sounds.length,
-                      itemBuilder: (context, index) {
-                        final sound = sounds[index];
-                        final isSelected =
-                            selectedSound?.soundId == sound.soundId;
-                    
-                        return GestureDetector(
-                          onTap: () {
-                            if (!isSelected) {
-                              setState(() {
-                                selectedSound = sound;
-                              });
-                            } else {
-                              setState(() {
-                                selectedSound = null;
-                              });
-                            }
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color:
-                                  isSelected
-                                      ? Colors.red.withOpacity(0.2)
-                                      : Colors.grey[900],
-                              border: Border.all(
-                                color:
-                                    isSelected ? Colors.red : Colors.transparent,
-                                width: 2,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                // Thumbnail
-                                Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[800],
-                                    borderRadius: BorderRadius.circular(8),
+                  return Obx(()
+                    {
+                      final selectedCategory =
+                          soundController.selectedCategory.value;
+                      return Obx(() {
+                        final favoriteIds = soundController.favoriteSoundIds;
+                        final filteredSounds =
+                            selectedCategory == 'All'
+                                ? sounds
+                                : sounds.where((sound) {
+                                  if (selectedCategory == 'Trending') {
+                                    return sound.isTrending;
+                                  } else if (selectedCategory == 'Favorites') {
+                                    return favoriteIds.contains(sound.soundId);
+                                  } else if (selectedCategory == 'Recent') {
+                                    final now = DateTime.now();
+                                    return now
+                                            .difference(sound.uploadedAt)
+                                            .inDays <=
+                                        7;
+                                  } else if (selectedCategory == 'Upload') {
+                                    return sound.uploadedBy ==
+                                        authController.user.uid;
+                                  } else {
+                                    return sound.category == selectedCategory;
+                                  }
+                                }).toList();
+
+                        return ListView.builder(
+                          controller: scrollController,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          itemCount: filteredSounds.length,
+                          itemBuilder: (context, index) {
+                            final sound = filteredSounds[index];
+                            final isSelected =
+                                selectedSound?.soundId == sound.soundId;
+
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  selectedSound =
+                                      isSelected ? null : sound;
+                                });
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color:
+                                      isSelected
+                                          ? Colors.red.withOpacity(0.2)
+                                          : Colors.grey[900],
+                                  border: Border.all(
+                                    color:
+                                        isSelected
+                                            ? Colors.red
+                                            : Colors.transparent,
+                                    width: 2,
                                   ),
-                                  child:
-                                      sound.thumbnailUrl != null
-                                          ? ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            child: Image.network(
-                                              sound.thumbnailUrl!,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (
-                                                context,
-                                                error,
-                                                stackTrace,
-                                              ) {
-                                                return const Icon(
-                                                  Icons.music_note,
-                                                  color: Colors.white,
-                                                  size: 25,
-                                                );
-                                              },
-                                            ),
-                                          )
-                                          : const Icon(
-                                            Icons.music_note,
-                                            color: Colors.white,
-                                            size: 25,
-                                          ),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                    
-                                const SizedBox(width: 12),
-                    
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        sound.soundName,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                child: Row(
+                                  children: [
+                                    // Thumbnail
+                                    Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[800],
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        sound.artistName,
-                                        style: const TextStyle(
-                                          color: Colors.grey,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          if (sound.isTrending)
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 6,
-                                                vertical: 2,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.red,
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                              ),
-                                              child: const Text(
-                                                '🔥 Trending',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 10,
+                                      child:
+                                          sound.thumbnailUrl != null
+                                              ? ClipRRect(
+                                                borderRadius: BorderRadius.circular(
+                                                  8,
                                                 ),
+                                                child: Image.network(
+                                                  sound.thumbnailUrl!,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (
+                                                    context,
+                                                    error,
+                                                    stackTrace,
+                                                  ) {
+                                                    return const Icon(
+                                                      Icons.music_note,
+                                                      color: Colors.white,
+                                                      size: 25,
+                                                    );
+                                                  },
+                                                ),
+                                              )
+                                              : const Icon(
+                                                Icons.music_note,
+                                                color: Colors.white,
+                                                size: 25,
                                               ),
-                                            ),
-                                          if (sound.isTrending)
-                                            const SizedBox(width: 8),
+                                    ),
+                                    const SizedBox(width: 12),
+
+                                    // Sound info
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
                                           Text(
-                                            '${sound.useCount} videos',
+                                            sound.soundName,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            sound.artistName,
                                             style: const TextStyle(
                                               color: Colors.grey,
-                                              fontSize: 11,
+                                              fontSize: 13,
                                             ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              if (sound.isTrending)
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 6,
+                                                        vertical: 2,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.red,
+                                                    borderRadius:
+                                                        BorderRadius.circular(4),
+                                                  ),
+                                                  child: const Text(
+                                                    '🔥 Trending',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 10,
+                                                    ),
+                                                  ),
+                                                ),
+                                              if (sound.isTrending)
+                                                const SizedBox(width: 8),
+                                              Text(
+                                                '${sound.useCount} videos',
+                                                style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 11,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
-                                    ],
-                                  ),
-                                ),
-                    
-                                IconButton(
-                                  onPressed:
-                                      () => playSoundPreview(
-                                        sound.soundUrl,
-                                        sound.soundName,
-                                        sound.soundId,
+                                    ),
+
+                                    // Play button
+                                    IconButton(
+                                      onPressed:
+                                          () => playSoundPreview(
+                                            sound.soundUrl,
+                                            sound.soundName,
+                                            sound.soundId,
+                                          ),
+                                      icon: Icon(
+                                        currentPlayingSoundId == sound.soundId
+                                            ? Icons.stop_circle_outlined
+                                            : Icons.play_circle_outline,
+                                        color: Colors.white,
+                                        size: 30,
                                       ),
-                                  icon: Icon(
-                                     currentPlayingSoundId == sound.soundId
-                                        ? Icons.stop_circle_outlined
-                                        : Icons.play_circle_outline,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ),
+                                    ),
+
+                                    if (isSelected)
+                                      const Icon(
+                                        Icons.check_circle,
+                                        color: Colors.red,
+                                        size: 24,
+                                      ),
+                                  ],
                                 ),
-                    
-                                if (isSelected)
-                                  const Icon(
-                                    Icons.check_circle,
-                                    color: Colors.red,
-                                    size: 24,
-                                  ),
-                              ],
-                            ),
-                          ),
+                              ),
+                            );
+                          },
                         );
-                      },
-                    ),
+                      });
+                    }
                   );
                 }),
               ),
@@ -407,33 +439,41 @@ class _SoundPickerWidgetState extends State<SoundPickerWidget> {
   }
 
   Widget _buildQuickTab(String label, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 18),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
-          ),
-        ],
+    return GestureDetector(
+      onTap: () {
+        debugPrint('Quick Tab Selected: $label');
+        soundController.filterByCategory(label);
+        setState(() {});
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.grey[800],
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 16),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Future<void> playSoundPreview(String soundUrl, String soundName, String soundId) async {
+  Future<void> playSoundPreview(
+    String soundUrl,
+    String soundName,
+    String soundId,
+  ) async {
     try {
       if (currentPlayingSoundId == soundId) {
         await audioPlayer.stop();
-        setState(() =>
-          currentPlayingSoundId = null,
-        );
+        setState(() => currentPlayingSoundId = null);
         Get.snackbar(
           'Preview',
           'Stopped ${soundName} preview',
@@ -448,9 +488,7 @@ class _SoundPickerWidgetState extends State<SoundPickerWidget> {
           snackPosition: SnackPosition.BOTTOM,
         );
         audioPlayer.onPlayerComplete.listen((event) {
-          setState(() =>
-            currentPlayingSoundId = null,
-          );
+          setState(() => currentPlayingSoundId = null);
           Get.snackbar(
             'Preview',
             'Stopped ${soundName} preview',

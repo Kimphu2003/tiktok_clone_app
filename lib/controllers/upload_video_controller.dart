@@ -78,6 +78,7 @@ class UploadVideoController extends GetxController {
     String caption,
     String videoPath,
     File videoFile,
+      String soundId,
   ) async {
     try {
       if (songName.isEmpty || caption.isEmpty || videoPath.isEmpty) {
@@ -125,6 +126,7 @@ class UploadVideoController extends GetxController {
         thumbnail: thumbnailUrl ?? '',
         localPath: localPath,
         userData: userData,
+        soundId: soundId,
       );
 
       debugPrint('after uploading to firestore');
@@ -152,6 +154,7 @@ class UploadVideoController extends GetxController {
     required String caption,
     required String videoUrl,
     String? cloudVideoUrl,
+    required String soundId,
     required String thumbnail,
     required String localPath,
     required Map<String, dynamic> userData,
@@ -167,6 +170,7 @@ class UploadVideoController extends GetxController {
         'caption': caption,
         'videoUrl': videoUrl,
         'cloudVideoUrl': cloudVideoUrl ?? '',
+        'soundId': soundId,
         'thumbnail': thumbnail,
         'localPath': localPath, // Store local path for offline access
         'profilePhoto': userData['profilePhoto'] ?? '',

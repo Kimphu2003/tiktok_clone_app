@@ -14,6 +14,9 @@ class Sound {
   int duration; // in seconds
   bool isTrending;
   bool isOriginal; // true if user-created, false if from library
+  int favoriteCount;
+  String soundNameLower;
+  String artistNameLower;
 
   Sound({
     required this.soundId,
@@ -29,7 +32,9 @@ class Sound {
     required this.duration,
     this.isTrending = false,
     this.isOriginal = false,
-  });
+    required this.favoriteCount,
+  }) : soundNameLower = soundName.toLowerCase(),
+       artistNameLower = artistName.toLowerCase();
 
   Map<String, dynamic> toJson() => {
     'soundId': soundId,
@@ -45,6 +50,9 @@ class Sound {
     'duration': duration,
     'isTrending': isTrending,
     'isOriginal': isOriginal,
+    'favoriteCount': favoriteCount,
+    'soundNameLower': soundNameLower,
+    'artistNameLower': artistNameLower,
   };
 
   static Sound fromSnap(DocumentSnapshot snap) {
@@ -63,6 +71,7 @@ class Sound {
       duration: snapshot['duration'] ?? 0,
       isTrending: snapshot['isTrending'] ?? false,
       isOriginal: snapshot['isOriginal'] ?? false,
+      favoriteCount: snapshot['favoriteCount'] ?? 0,
     );
   }
 }

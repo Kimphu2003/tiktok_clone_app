@@ -222,6 +222,7 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
                             captionController.text,
                             widget.videoPath,
                             widget.videoFile,
+                            selectedSound!.soundId,
                           );
               
                           Get.snackbar(

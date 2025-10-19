@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -19,8 +20,11 @@ class SoundController extends GetxController {
   List<Sound> get searchResults => _searchResults.value;
 
   final RxBool isLoading = false.obs;
+  final RxInt favoriteCount = 0.obs;
   final RxString selectedCategory = 'All'.obs;
 
+  StreamSubscription? _favoriteListener;
+  final RxSet<String> favoriteSoundIds = <String>{}.obs;
 
   @override
   void onInit() {
@@ -35,17 +39,24 @@ class SoundController extends GetxController {
       }),
     );
     loadTrendingSounds();
+    listenToFavoriteSounds();
+  }
+
+  @override
+  void onClose() {
+    _favoriteListener?.cancel();
+    super.onClose();
   }
 
   void loadTrendingSounds() async {
     try {
       isLoading.value = true;
       var soundSnapshot =
-          await fireStore
-              .collection('sounds')
-              .orderBy('useCount', descending: true)
-              .limit(20)
-              .get();
+      await fireStore
+          .collection('sounds')
+          .orderBy('useCount', descending: true)
+          .limit(20)
+          .get();
       _trendingSounds.value =
           soundSnapshot.docs.map((doc) => Sound.fromSnap(doc)).toList();
     } catch (e) {
@@ -55,6 +66,42 @@ class SoundController extends GetxController {
     }
   }
 
+  void listenToFavoriteSounds() async {
+    _favoriteListener?.cancel();
+    _favoriteListener = fireStore.collection('users').doc(authController.user.uid)
+        .collection('favoriteSounds')
+        .snapshots()
+        .listen((snapshot) {
+      favoriteSoundIds.clear();
+      for (var doc in snapshot.docs) {
+        favoriteSoundIds.add(doc.id);
+      }
+    }, onError: (e) {
+      print('Error listening to favorites: $e');
+    });
+  }
+
+  bool isSoundFavorited(String soundId) {
+    return favoriteSoundIds.contains(soundId);
+  }
+
+  // Future<void> loadFavoriteSounds() async {
+  //   _favoriteListener?.cancel();
+  //   try {
+  //     final snapshot = await fireStore
+  //         .collection('users')
+  //         .doc(authController.user.uid)
+  //         .collection('favoriteSounds')
+  //         .get();
+  //
+  //     favoriteSoundIds.assignAll(snapshot.docs.map((doc) => doc.id));
+  //   } catch (e) {
+  //     favoriteSoundIds.clear();
+  //   }
+  // }
+  //
+
+
   void searchSounds(String query) async {
     if (query.isEmpty) {
       _searchResults.value = [];
@@ -62,19 +109,20 @@ class SoundController extends GetxController {
     }
     try {
       isLoading.value = true;
+      final String queryLower = query.toLowerCase().trim();
       var nameResults =
-          await fireStore
-              .collection('sounds')
-              .where('soundName', isGreaterThanOrEqualTo: query)
-              .where('soundName', isLessThanOrEqualTo: query + '\uf8ff')
-              .get();
+      await fireStore
+          .collection('sounds')
+          .where('soundNameLower', isGreaterThanOrEqualTo: queryLower)
+          .where('soundNameLower', isLessThanOrEqualTo: queryLower + '\uf8ff')
+          .get();
 
       var artistResults =
-          await fireStore
-              .collection('sounds')
-              .where('artist', isGreaterThanOrEqualTo: query)
-              .where('artist', isLessThanOrEqualTo: query + '\uf8ff')
-              .get();
+      await fireStore
+          .collection('sounds')
+          .where('artistNameLower', isGreaterThanOrEqualTo: queryLower)
+          .where('artistNameLower', isLessThanOrEqualTo: queryLower + '\uf8ff')
+          .get();
 
       Set<Sound> allResults = {};
       for (var doc in nameResults.docs) {
@@ -86,8 +134,10 @@ class SoundController extends GetxController {
       }
 
       _searchResults.value = allResults.toList();
+      isLoading.value = false;
     } catch (e) {
       debugPrint('Error while searching sounds: $e');
+      isLoading.value = false;
     }
   }
 
@@ -101,10 +151,10 @@ class SoundController extends GetxController {
   Future<List<String>> getVideosWithSound(String soundId) async {
     try {
       var videoSnapshot =
-          await fireStore
-              .collection('videos')
-              .where('songName', isEqualTo: soundId)
-              .get();
+      await fireStore
+          .collection('videos')
+          .where('songName', isEqualTo: soundId)
+          .get();
 
       return videoSnapshot.docs.map((doc) => doc.id).toList();
     } catch (e) {
@@ -142,6 +192,7 @@ class SoundController extends GetxController {
         uploadedBy: authController.user.uid,
         category: category,
         duration: duration,
+        favoriteCount: favoriteCount.value,
       );
 
       await fireStore.collection('sounds').doc(soundId).set(sound.toJson());
@@ -190,49 +241,31 @@ class SoundController extends GetxController {
     }
   }
 
-  Future<void> toggleFavoriteSound(String soundId) async {
+  Future<void> toggleFavoriteSound(Sound sound) async {
     try {
-      var userDoc =
-          await fireStore
-              .collection('users')
-              .doc(authController.user.uid)
-              .collection('favoriteSounds')
-              .doc(soundId)
-              .get();
+      final userId = authController.user.uid;
+      final soundId = sound.soundId;
+      final ref = fireStore
+          .collection('users')
+          .doc(userId)
+          .collection('favoriteSounds')
+          .doc(soundId);
 
-      if (userDoc.exists) {
-        await fireStore
-            .collection('users')
-            .doc(authController.user.uid)
-            .collection('favoriteSounds')
-            .doc(soundId)
-            .delete();
+      if (favoriteSoundIds.contains(soundId)) {
+        await ref.delete();
+        favoriteSoundIds.remove(soundId);
       } else {
-        await fireStore
-            .collection('users')
-            .doc(authController.user.uid)
-            .collection('favoriteSounds')
-            .doc(soundId)
-            .set({'timestamp': DateTime.now()});
+        await ref.set({
+          'soundName': sound.soundName,
+          'artistName': sound.artistName,
+          'thumbnailUrl': sound.thumbnailUrl,
+          'soundUrl': sound.soundUrl,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+        favoriteSoundIds.add(soundId);
       }
     } catch (e) {
       debugPrint('Error while toggling favorite sounds: $e');
-    }
-
-    Future<bool> isSoundFavorited(String soundId) async {
-      try {
-        var favoriteDoc =
-            await fireStore
-                .collection('users')
-                .doc(authController.user.uid)
-                .collection('favoriteSounds')
-                .doc(soundId)
-                .get();
-
-        return favoriteDoc.exists;
-      } catch (e) {
-        return false;
-      }
     }
   }
 
@@ -242,7 +275,9 @@ class SoundController extends GetxController {
       final request = http.MultipartRequest('POST', url);
       request.fields['upload_preset'] = uploadPreset;
       request.fields['public_id'] =
-          'audio_${DateTime.now().millisecondsSinceEpoch}';
+      'audio_${DateTime
+          .now()
+          .millisecondsSinceEpoch}';
 
       request.files.add(
         await http.MultipartFile.fromPath('file', audioFile.path),
