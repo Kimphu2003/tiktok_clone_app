@@ -73,12 +73,12 @@ class UploadVideoController extends GetxController {
     }
   }
 
-  uploadVideo(
+  Future<void> uploadVideo(
     String songName,
     String caption,
     String videoPath,
     File videoFile,
-      String soundId,
+    String? soundId,
   ) async {
     try {
       if (songName.isEmpty || caption.isEmpty || videoPath.isEmpty) {
@@ -114,8 +114,6 @@ class UploadVideoController extends GetxController {
         throw Exception('Failed to upload video to Cloudinary');
       }
 
-      debugPrint('before uploading to firestore');
-
       await uploadVideoToFirestore(
         videoId: videoId,
         uid: uid,
@@ -126,10 +124,8 @@ class UploadVideoController extends GetxController {
         thumbnail: thumbnailUrl ?? '',
         localPath: localPath,
         userData: userData,
-        soundId: soundId,
+        soundId: soundId ?? 'original_sound',
       );
-
-      debugPrint('after uploading to firestore');
 
     } catch (e) {
       throw Exception('Error uploading video: $e');
@@ -188,9 +184,7 @@ class UploadVideoController extends GetxController {
     String resourceType,
   ) async {
     try {
-      final url = Uri.parse(
-        '$apiUrl/$resourceType/upload',
-      );
+      final url = Uri.parse('$apiUrl/$resourceType/upload');
       final request = http.MultipartRequest('POST', url);
 
       request.files.add(await http.MultipartFile.fromPath('file', file.path));
@@ -216,9 +210,7 @@ class UploadVideoController extends GetxController {
 
   static Future<String?> uploadImageBytes(Uint8List imageBytes) async {
     try {
-      final url = Uri.parse(
-        '$apiUrl/image/upload',
-      );
+      final url = Uri.parse('$apiUrl/image/upload');
       var request = http.MultipartRequest('POST', url);
 
       request.files.add(

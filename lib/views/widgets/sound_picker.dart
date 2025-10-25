@@ -167,33 +167,33 @@ class _SoundPickerWidgetState extends State<SoundPickerWidget> {
                     );
                   }
 
-                  return Obx(()
-                    {
-                      final selectedCategory =
-                          soundController.selectedCategory.value;
+
+
                       return Obx(() {
+                        final selectedCategory =
+                            soundController.selectedCategory.value;
                         final favoriteIds = soundController.favoriteSoundIds;
                         final filteredSounds =
-                            selectedCategory == 'All'
-                                ? sounds
-                                : sounds.where((sound) {
-                                  if (selectedCategory == 'Trending') {
-                                    return sound.isTrending;
-                                  } else if (selectedCategory == 'Favorites') {
-                                    return favoriteIds.contains(sound.soundId);
-                                  } else if (selectedCategory == 'Recent') {
-                                    final now = DateTime.now();
-                                    return now
-                                            .difference(sound.uploadedAt)
-                                            .inDays <=
-                                        7;
-                                  } else if (selectedCategory == 'Upload') {
-                                    return sound.uploadedBy ==
-                                        authController.user.uid;
-                                  } else {
-                                    return sound.category == selectedCategory;
-                                  }
-                                }).toList();
+                        selectedCategory == 'All'
+                            ? sounds
+                            : sounds.where((sound) {
+                          if (selectedCategory == 'Trending') {
+                            return sound.isTrending;
+                          } else if (selectedCategory == 'Favorites') {
+                            return favoriteIds.contains(sound.soundId);
+                          } else if (selectedCategory == 'Recent') {
+                            final now = DateTime.now();
+                            return now
+                                .difference(sound.uploadedAt)
+                                .inDays <=
+                                7;
+                          } else if (selectedCategory == 'Upload') {
+                            return sound.uploadedBy ==
+                                authController.user.uid;
+                          } else {
+                            return sound.category == selectedCategory;
+                          }
+                        }).toList();
 
                         return ListView.builder(
                           controller: scrollController,
@@ -208,7 +208,7 @@ class _SoundPickerWidgetState extends State<SoundPickerWidget> {
                               onTap: () {
                                 setState(() {
                                   selectedSound =
-                                      isSelected ? null : sound;
+                                  isSelected ? null : sound;
                                 });
                               },
                               child: Container(
@@ -216,14 +216,14 @@ class _SoundPickerWidgetState extends State<SoundPickerWidget> {
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
                                   color:
-                                      isSelected
-                                          ? Colors.red.withOpacity(0.2)
-                                          : Colors.grey[900],
+                                  isSelected
+                                      ? Colors.red.withOpacity(0.2)
+                                      : Colors.grey[900],
                                   border: Border.all(
                                     color:
-                                        isSelected
-                                            ? Colors.red
-                                            : Colors.transparent,
+                                    isSelected
+                                        ? Colors.red
+                                        : Colors.transparent,
                                     width: 2,
                                   ),
                                   borderRadius: BorderRadius.circular(12),
@@ -239,32 +239,30 @@ class _SoundPickerWidgetState extends State<SoundPickerWidget> {
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child:
-                                          sound.thumbnailUrl != null
-                                              ? ClipRRect(
-                                                borderRadius: BorderRadius.circular(
-                                                  8,
-                                                ),
-                                                child: Image.network(
-                                                  sound.thumbnailUrl!,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (
-                                                    context,
-                                                    error,
-                                                    stackTrace,
-                                                  ) {
-                                                    return const Icon(
-                                                      Icons.music_note,
-                                                      color: Colors.white,
-                                                      size: 25,
-                                                    );
-                                                  },
-                                                ),
-                                              )
-                                              : const Icon(
-                                                Icons.music_note,
-                                                color: Colors.white,
-                                                size: 25,
-                                              ),
+                                      sound.thumbnailUrl != null
+                                          ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                          8,
+                                        ),
+                                        child: Image.network(
+                                          sound.thumbnailUrl!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context,
+                                              error,
+                                              stackTrace,) {
+                                            return const Icon(
+                                              Icons.music_note,
+                                              color: Colors.white,
+                                              size: 25,
+                                            );
+                                          },
+                                        ),
+                                      )
+                                          : const Icon(
+                                        Icons.music_note,
+                                        color: Colors.white,
+                                        size: 25,
+                                      ),
                                     ),
                                     const SizedBox(width: 12),
 
@@ -272,7 +270,7 @@ class _SoundPickerWidgetState extends State<SoundPickerWidget> {
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             sound.soundName,
@@ -298,14 +296,14 @@ class _SoundPickerWidgetState extends State<SoundPickerWidget> {
                                               if (sound.isTrending)
                                                 Container(
                                                   padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 6,
-                                                        vertical: 2,
-                                                      ),
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 2,
+                                                  ),
                                                   decoration: BoxDecoration(
                                                     color: Colors.red,
                                                     borderRadius:
-                                                        BorderRadius.circular(4),
+                                                    BorderRadius.circular(4),
                                                   ),
                                                   child: const Text(
                                                     '🔥 Trending',
@@ -333,7 +331,8 @@ class _SoundPickerWidgetState extends State<SoundPickerWidget> {
                                     // Play button
                                     IconButton(
                                       onPressed:
-                                          () => playSoundPreview(
+                                          () =>
+                                          playSoundPreview(
                                             sound.soundUrl,
                                             sound.soundName,
                                             sound.soundId,
@@ -359,8 +358,7 @@ class _SoundPickerWidgetState extends State<SoundPickerWidget> {
                             );
                           },
                         );
-                      });
-                    }
+                      }
                   );
                 }),
               ),
@@ -478,6 +476,7 @@ class _SoundPickerWidgetState extends State<SoundPickerWidget> {
           'Preview',
           'Stopped ${soundName} preview',
           snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 1),
         );
       } else {
         await audioPlayer.play(UrlSource(soundUrl));
@@ -486,6 +485,7 @@ class _SoundPickerWidgetState extends State<SoundPickerWidget> {
           'Preview',
           'Playing ${soundName}...',
           snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 2),
         );
         audioPlayer.onPlayerComplete.listen((event) {
           setState(() => currentPlayingSoundId = null);
@@ -493,6 +493,7 @@ class _SoundPickerWidgetState extends State<SoundPickerWidget> {
             'Preview',
             'Stopped ${soundName} preview',
             snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 1),
           );
         });
       }

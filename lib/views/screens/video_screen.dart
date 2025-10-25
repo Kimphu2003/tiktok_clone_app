@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tiktok_clone_app/constants.dart';
+import 'package:tiktok_clone_app/models/video_model.dart';
 import 'package:tiktok_clone_app/views/screens/comment_screen.dart';
 import 'package:tiktok_clone_app/views/screens/profile_screen.dart';
 import 'package:tiktok_clone_app/views/screens/search_screen.dart';
@@ -13,7 +14,6 @@ import 'package:get/get.dart';
 import '../../controllers/sound_controller.dart';
 import '../../controllers/video_controller.dart';
 import '../widgets/tiktok_bottom_sheet.dart';
-import 'add_test_sounds_screen.dart';
 
 class VideoScreen extends StatefulWidget {
   const VideoScreen({super.key});
@@ -30,6 +30,9 @@ class _VideoScreenState extends State<VideoScreen> {
 
   List<String> currentUserFollowers = [];
 
+  List<VideoModel>? _cachedFilteredVideos;
+  String? _cachedLabel;
+
   int _selectedIndex = 1;
 
   late ValueNotifier<double> downloadProgress;
@@ -43,10 +46,6 @@ class _VideoScreenState extends State<VideoScreen> {
     isCompactMode = ValueNotifier(false);
     speedNotifier = ValueNotifier(1.0);
 
-    isCompactMode.addListener(() {
-      debugPrint('Compact mode changed: ${isCompactMode.value}');
-    });
-
     fetchCurrentUserFollowers();
   }
 
@@ -54,7 +53,25 @@ class _VideoScreenState extends State<VideoScreen> {
   void dispose() {
     downloadProgress.dispose();
     isCompactMode.dispose();
+    speedNotifier.dispose();
     super.dispose();
+  }
+
+  List<VideoModel> cachedFilteredVideos(String label) {
+    if (_cachedLabel == label && _cachedFilteredVideos != null) {
+      return _cachedFilteredVideos!;
+    } else {
+      final allVideos = videoController.videoList;
+      final filteredVideos =
+          label == 'Dành cho bạn'
+              ? allVideos
+              : allVideos
+                  .where((video) => currentUserFollowers.contains(video.uid))
+                  .toList();
+      _cachedLabel = label;
+      _cachedFilteredVideos = filteredVideos;
+      return filteredVideos;
+    }
   }
 
   Future<void> fetchCurrentUserFollowers() async {
@@ -143,15 +160,15 @@ class _VideoScreenState extends State<VideoScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed:
-            () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => AddTestSoundsScreen()),
-            ),
-        child: const Icon(Icons.add, color: Colors.white),
-        backgroundColor: Colors.red,
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed:
+      //       () => Navigator.push(
+      //         context,
+      //         MaterialPageRoute(builder: (_) => AddTestSoundsScreen()),
+      //       ),
+      //   child: const Icon(Icons.add, color: Colors.white),
+      //   backgroundColor: Colors.red,
+      // ),
     );
   }
 
@@ -202,12 +219,15 @@ class _VideoScreenState extends State<VideoScreen> {
   Obx _buildFeed(Size size, String label) {
     return Obx(() {
       final allVideos = videoController.videoList;
-      final filteredVideos =
-          label == 'Dành cho bạn'
-              ? allVideos
-              : allVideos
-                  .where((video) => currentUserFollowers.contains(video.uid))
-                  .toList();
+
+      // Invalidate cache if list has changed
+      if (_cachedFilteredVideos == null ||
+          _cachedFilteredVideos!.length != allVideos.length) {
+        _cachedLabel = null;
+        _cachedFilteredVideos = null;
+      }
+
+      final filteredVideos = cachedFilteredVideos(label);
       if (_selectedIndex == 1 && filteredVideos.isEmpty) {
         return const Center(child: CircularProgressIndicator());
       }
@@ -231,14 +251,15 @@ class _VideoScreenState extends State<VideoScreen> {
                   const SizedBox(height: 100),
                   Expanded(
                     child: Row(
-                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Expanded(
                           child: Container(
                             margin: const EdgeInsets.only(left: 20, bottom: 50),
+                            // color: Colors.grey,
                             child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -288,6 +309,7 @@ class _VideoScreenState extends State<VideoScreen> {
                             ),
                           ),
                         ),
+
                         ValueListenableBuilder(
                           valueListenable: isCompactMode,
                           builder: (context, bool isCompact, _) {
@@ -329,6 +351,7 @@ class _VideoScreenState extends State<VideoScreen> {
                                 )
                                 : Container(
                                   width: 100,
+                                  // color: Colors.red,
                                   margin: EdgeInsets.only(
                                     top: size.height / 6.5,
                                     bottom: 50,
@@ -409,7 +432,7 @@ class _VideoScreenState extends State<VideoScreen> {
                                       const SizedBox(height: 10),
                                       Row(
                                         mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                                            MainAxisAlignment.end,
                                         children: [
                                           GestureDetector(
                                             onTap: () async {
@@ -430,9 +453,14 @@ class _VideoScreenState extends State<VideoScreen> {
                                                 );
                                               }
                                             },
-                                            child: CircleAnimation(
-                                              child: buildMusicAlbum(
-                                                data.thumbnail!,
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                right: 12.0,
+                                              ),
+                                              child: CircleAnimation(
+                                                child: buildMusicAlbum(
+                                                  data.thumbnail!,
+                                                ),
                                               ),
                                             ),
                                           ),
@@ -493,7 +521,7 @@ class _VideoScreenState extends State<VideoScreen> {
     });
   }
 
-  buildProfile(String profilePhoto, String uid) {
+  Widget buildProfile(String profilePhoto, String uid) {
     return GestureDetector(
       onTap:
           () => Navigator.push(
@@ -578,7 +606,7 @@ class _VideoScreenState extends State<VideoScreen> {
     );
   }
 
-  buildMusicAlbum(String thumbnail) {
+  Widget buildMusicAlbum(String thumbnail) {
     return SizedBox(
       height: 60,
       width: 60,
@@ -606,7 +634,7 @@ class _VideoScreenState extends State<VideoScreen> {
     );
   }
 
-  _buildActionButton({
+  Widget _buildActionButton({
     required IconData icon,
     required int count,
     required VoidCallback onTap,
