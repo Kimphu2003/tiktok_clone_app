@@ -11,11 +11,11 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  int _pageIndex = 0;
+class HomeScreenState extends State<HomeScreen> {
+  int pageIndex = 0;
 
   List<Widget> pages = [
     VideoScreen(),
@@ -31,10 +31,10 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         onTap: (int index) {
           setState(() {
-            _pageIndex = index;
+            pageIndex = index;
           });
         },
-        currentIndex: _pageIndex,
+        currentIndex: pageIndex,
         backgroundColor: backgroundColor,
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Colors.white,
@@ -50,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: IndexedStack(
-        index: _pageIndex,
+        index: pageIndex,
         children: pages,
       ),
     );

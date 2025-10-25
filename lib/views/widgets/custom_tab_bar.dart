@@ -35,6 +35,18 @@ class _CustomTabBarState extends State<CustomTabBar> {
   }
 
   @override
+  void dispose() {
+    personalVideoThumbnails.clear();
+    personalVideos.clear();
+    favoriteVideoThumbnails.clear();
+    favoriteVideos.clear();
+    likedVideoThumbnails.clear();
+    likedVideos.clear();
+
+    super.dispose();
+  }
+
+  @override
   void didUpdateWidget(covariant CustomTabBar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.userData['uid'] != widget.userData['uid']) {
@@ -205,6 +217,10 @@ class _CustomTabBarState extends State<CustomTabBar> {
       }
 
       return GridView.builder(
+        cacheExtent: 300, // lower cache distance
+        addAutomaticKeepAlives: false,
+        addRepaintBoundaries: false,
+        physics: const BouncingScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           childAspectRatio: 1,
@@ -255,7 +271,16 @@ class _CustomTabBarState extends State<CustomTabBar> {
                 );
               }
             },
-            child: CachedNetworkImage(fit: BoxFit.cover, imageUrl: thumbnail),
+            child: CachedNetworkImage(
+              imageUrl: thumbnail,
+              fit: BoxFit.cover,
+              memCacheHeight: 300,
+              memCacheWidth: 300,
+              maxWidthDiskCache: 300,
+              maxHeightDiskCache: 300,
+              placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 1.5)),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
+            ),
           );
         },
       );

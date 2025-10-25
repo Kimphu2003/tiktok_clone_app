@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/controllers/profile_controller.dart';
 import 'package:get/get.dart';
+import 'home_screen.dart';
 
 class AddFriendScreen extends StatefulWidget {
   final String uid;
@@ -49,7 +50,11 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
             ),
             leading: IconButton(
               onPressed: () {
-                Navigator.pop(context);
+                final homeState = context.findAncestorStateOfType<
+                    HomeScreenState>();
+                homeState?.setState(() {
+                  homeState.pageIndex = 0;
+                });
               },
               icon: const Icon(Icons.arrow_back, color: Colors.black),
             ),
