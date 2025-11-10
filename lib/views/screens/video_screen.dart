@@ -14,6 +14,7 @@ import 'package:get/get.dart';
 import '../../controllers/sound_controller.dart';
 import '../../controllers/video_controller.dart';
 import '../widgets/tiktok_bottom_sheet.dart';
+import 'livestream_screen.dart';
 
 class VideoScreen extends StatefulWidget {
   const VideoScreen({super.key});
@@ -26,6 +27,9 @@ class _VideoScreenState extends State<VideoScreen> {
   final VideoController videoController = Get.find();
   final SoundController soundController = Get.find();
   final PageController _pageController = PageController(initialPage: 1);
+  final PageController _forYouController = PageController(initialPage: 0);
+  final PageController _followingController = PageController(initialPage: 0);
+
   final TikTokBottomSheet tiktokBottomSheet = TikTokBottomSheet();
 
   List<String> currentUserFollowers = [];
@@ -38,6 +42,7 @@ class _VideoScreenState extends State<VideoScreen> {
   late ValueNotifier<double> downloadProgress;
   late ValueNotifier<bool> isCompactMode;
   late ValueNotifier<double> speedNotifier;
+  late ValueNotifier<bool> isAutomaticallyScroll;
 
   @override
   void initState() {
@@ -45,6 +50,7 @@ class _VideoScreenState extends State<VideoScreen> {
     downloadProgress = ValueNotifier(0.0);
     isCompactMode = ValueNotifier(false);
     speedNotifier = ValueNotifier(1.0);
+    isAutomaticallyScroll = ValueNotifier(false);
 
     fetchCurrentUserFollowers();
   }
@@ -54,6 +60,7 @@ class _VideoScreenState extends State<VideoScreen> {
     downloadProgress.dispose();
     isCompactMode.dispose();
     speedNotifier.dispose();
+    isAutomaticallyScroll.dispose();
     super.dispose();
   }
 
@@ -106,7 +113,7 @@ class _VideoScreenState extends State<VideoScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   InkWell(
-                    onTap: () {},
+                    onTap: () => Get.to(() => const LiveStreamsScreen()),
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
@@ -152,8 +159,8 @@ class _VideoScreenState extends State<VideoScreen> {
                 onPageChanged:
                     (index) => setState(() => _selectedIndex = index),
                 children: [
-                  _buildFeed(size, 'Đang theo dõi'),
-                  _buildFeed(size, 'Dành cho bạn'),
+                  _buildFeed(size, 'Đang theo dõi', _followingController),
+                  _buildFeed(size, 'Dành cho bạn', _forYouController),
                 ],
               ),
             ),
@@ -162,10 +169,10 @@ class _VideoScreenState extends State<VideoScreen> {
       ),
       // floatingActionButton: FloatingActionButton(
       //   onPressed:
-      //       () => Navigator.push(
-      //         context,
-      //         MaterialPageRoute(builder: (_) => AddTestSoundsScreen()),
-      //       ),
+      //       () =>
+      //           throw UnimplementedError(
+      //             'Go Live functionality not implemented',
+      //           ),
       //   child: const Icon(Icons.add, color: Colors.white),
       //   backgroundColor: Colors.red,
       // ),
@@ -216,7 +223,7 @@ class _VideoScreenState extends State<VideoScreen> {
     );
   }
 
-  Obx _buildFeed(Size size, String label) {
+  Obx _buildFeed(Size size, String label, PageController controller) {
     return Obx(() {
       final allVideos = videoController.videoList;
 
@@ -234,7 +241,7 @@ class _VideoScreenState extends State<VideoScreen> {
       return PageView.builder(
         itemCount: filteredVideos.length,
         scrollDirection: Axis.vertical,
-        controller: PageController(initialPage: 0, viewportFraction: 1),
+        controller: controller,
         itemBuilder: (context, index) {
           final data = filteredVideos[index];
           return Stack(
@@ -245,6 +252,19 @@ class _VideoScreenState extends State<VideoScreen> {
                 downloadProgress: downloadProgress,
                 compactModeNotifier: isCompactMode,
                 speedNotifier: speedNotifier,
+                isAutomaticallyScroll: isAutomaticallyScroll,
+                onVideoCompleted: () {
+                  if (isAutomaticallyScroll.value) {
+                    Future.delayed(const Duration(milliseconds: 500), () {
+                      if (index + 1 < filteredVideos.length) {
+                        controller.nextPage(
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                    });
+                  }
+                },
               ),
               Column(
                 children: [
@@ -427,6 +447,7 @@ class _VideoScreenState extends State<VideoScreen> {
                                                   downloadProgress,
                                                   isCompactMode,
                                                   speedNotifier,
+                                              isAutomaticallyScroll,
                                                 ),
                                       ),
                                       const SizedBox(height: 10),

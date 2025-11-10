@@ -17,6 +17,7 @@ class TikTokBottomSheet {
     ValueNotifier<double>? downloadProgress,
     ValueNotifier<bool>? isCompactMode,
     ValueNotifier<double>? speedNotifier,
+      ValueNotifier<bool>? isAutoScrollEnabled,
   ) {
     showModalBottomSheet(
       context: context,
@@ -75,6 +76,7 @@ class TikTokBottomSheet {
                       icon: Icons.refresh,
                       label: "Cuộn tự động",
                       videoId: videoId,
+                      isAutoScrollEnabled: isAutoScrollEnabled,
                     ),
                     _ActionButton(
                       context: context,
@@ -144,6 +146,7 @@ class TikTokBottomSheet {
     ValueNotifier<double>? downloadProgress,
     ValueNotifier<bool>? compactModeNotifier,
     ValueNotifier<double>? speedNotifier,
+ValueNotifier<bool>? isAutoScrollEnabled,
   }) {
     return Column(
       mainAxisSize: MainAxisSize.max,
@@ -179,7 +182,22 @@ class TikTokBottomSheet {
                       : 'Đã tắt chế độ xem gọn.',
                 );
               }
-            } else {
+            } else if(label == 'Cuộn tự động') {
+              Navigator.pop(context);
+              if (isAutoScrollEnabled != null) {
+                isAutoScrollEnabled.value = !(isAutoScrollEnabled.value);
+                Get.snackbar(
+                  'Cuộn tự động',
+                  isAutoScrollEnabled.value
+                      ? 'Đã bật cuộn tự động.'
+                      : 'Đã tắt cuộn tự động.',
+                );
+              }
+
+              // Get.snackbar(label, 'Chức năng "$label" chưa được triển khai.');
+
+            }
+            else {
               Navigator.pop(context);
               Get.snackbar(label, 'Chức năng "$label" chưa được triển khai.');
             }

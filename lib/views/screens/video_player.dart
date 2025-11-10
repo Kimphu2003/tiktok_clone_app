@@ -32,6 +32,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
   late ValueNotifier<double> downloadProgress;
   late ValueNotifier<bool> compactModeNotifier;
   late ValueNotifier<double> speedNotifier;
+  late ValueNotifier<bool> isAutomaticallyScroll;
 
   @override
   void initState() {
@@ -39,6 +40,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
     downloadProgress = ValueNotifier(0.0);
     compactModeNotifier = ValueNotifier(false);
     speedNotifier = ValueNotifier(1.0);
+    isAutomaticallyScroll = ValueNotifier(false);
   }
 
   @override
@@ -46,6 +48,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
     downloadProgress.dispose();
     compactModeNotifier.dispose();
     speedNotifier.dispose();
+    isAutomaticallyScroll.dispose();
     super.dispose();
   }
 
@@ -69,6 +72,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
                         downloadProgress: downloadProgress,
                         compactModeNotifier: compactModeNotifier,
                         speedNotifier: speedNotifier,
+                        isAutomaticallyScroll: isAutomaticallyScroll,
                       ),
                       Column(
                         children: [
@@ -223,6 +227,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
                                                   downloadProgress,
                                                   compactModeNotifier,
                                                   speedNotifier,
+                                              isAutomaticallyScroll,
                                                 ),
                                       ),
                                       const SizedBox(height: 20),

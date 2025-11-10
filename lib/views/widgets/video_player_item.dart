@@ -10,6 +10,8 @@ class VideoPlayerItem extends StatefulWidget {
   final ValueNotifier<double> downloadProgress;
   final ValueNotifier<bool> compactModeNotifier;
   final ValueNotifier<double> speedNotifier;
+  final ValueNotifier<bool>? isAutomaticallyScroll;
+  final Function()? onVideoCompleted;
 
   const VideoPlayerItem({
     super.key,
@@ -18,6 +20,8 @@ class VideoPlayerItem extends StatefulWidget {
     required this.downloadProgress,
     required this.speedNotifier,
     required this.compactModeNotifier,
+    required this.isAutomaticallyScroll,
+    this.onVideoCompleted,
   });
 
   @override
@@ -50,6 +54,10 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
         }
       });
 
+    if(widget.isAutomaticallyScroll != null) {
+      videoPlayerController.setLooping(false);
+    }
+
     videoPlayerController.addListener(() {
       if (mounted) {
         if (videoPlayerController.value.hasError) {
@@ -59,6 +67,17 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
         }
         if (!_isDragging) {
           setState(() {});
+        }
+        final position = videoPlayerController.value.position;
+        final duration = videoPlayerController.value.duration;
+
+        // Avoid calling it multiple times per loop
+        if (duration != Duration.zero &&
+            position >= duration - const Duration(milliseconds: 300)) {
+          if (widget.onVideoCompleted != null) {
+            debugPrint('Video completed callback triggered.');
+            widget.onVideoCompleted!();
+          }
         }
       }
     });
@@ -118,6 +137,7 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
                           widget.downloadProgress,
                           widget.compactModeNotifier,
                           widget.speedNotifier,
+                          widget.isAutomaticallyScroll,
                         ),
                     child: Stack(
                       children: [
