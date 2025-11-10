@@ -14,7 +14,7 @@ class ProfileController extends GetxController {
   final Rx<String> bio = ''.obs;
   final Rx<String> tiktokId = ''.obs;
 
-  updateUserId(String uid) {
+  void updateUserId(String uid) {
     _uid.value = uid;
     getUserData();
   }
@@ -35,11 +35,13 @@ class ProfileController extends GetxController {
     DocumentSnapshot userDoc =
         await fireStore.collection('users').doc(_uid.value).get();
     Map<String, dynamic> userData = userDoc.data()! as Map<String, dynamic>;
+
     username.value = userData['name'];
     profilePhoto.value = userData['profilePhoto'];
     bio.value = userData['bio'];
     tiktokId.value =
         userData['name'].toString().toLowerCase().removeAllWhitespace;
+
     int likes = 0;
     int followers = 0;
     int following = 0;

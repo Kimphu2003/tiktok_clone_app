@@ -78,4 +78,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'tiktok-clone-app-9bc87.firebasestorage.app',
     measurementId: 'G-YEQNE4HFT3',
   );
+
 }

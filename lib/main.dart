@@ -1,8 +1,10 @@
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:tiktok_clone_app/constants.dart';
+import 'package:tiktok_clone_app/controllers/livestream_controller.dart';
 import 'package:tiktok_clone_app/controllers/profile_controller.dart';
 import 'package:tiktok_clone_app/controllers/sound_controller.dart';
 import 'package:tiktok_clone_app/controllers/video_controller.dart';
@@ -25,10 +27,12 @@ void main() async {
     Get.put(VideoController());
     Get.put(SoundController());
     Get.put(SoundController());
+    Get.put(LiveStreamController());
   });
   await Hive.initFlutter();
   Hive.registerAdapter(VideoModelAdapter());
   await Hive.openBox<VideoModel>('videos');
+
   runApp(const MyApp());
 }
 
@@ -60,7 +64,10 @@ class MyApp extends StatelessWidget {
           page: () => EditProfileDetailScreen(field: 'Tiểu sử'),
         ),
 
-        GetPage(name: '/add-friends', page: () => AddFriendScreen(uid: authController.user.uid,),),
+        GetPage(
+          name: '/add-friends',
+          page: () => AddFriendScreen(uid: authController.user.uid),
+        ),
       ],
     );
   }
