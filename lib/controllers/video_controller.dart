@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
@@ -28,16 +29,34 @@ class VideoController extends GetxController {
             for (var element in query.docs) {
               retVal.add(VideoModel.fromSnap(element));
             }
+            debugPrint('🎥 Fetched ${retVal.length} videos from Firestore');
             return retVal;
           }),
     );
 
-    _loadUserFavoriteVideos();
+    loadUserFavoriteVideos();
   }
 
-  Future<void> _loadUserFavoriteVideos() async {
-    String uid = firebaseAuth.currentUser!.uid;
-    fireStore.collection('users').doc(uid).snapshots().listen((doc) {
+  StreamSubscription? _favoritesSubscription;
+
+  @override
+  void onClose() {
+    _favoritesSubscription?.cancel();
+    super.onClose();
+  }
+
+  Future<void> loadUserFavoriteVideos() async {
+    final user = firebaseAuth.currentUser;
+    if (user == null) {
+      debugPrint('⚠️ User not authenticated yet, skipping favorite videos load');
+      return;
+    }
+    
+    // Cancel existing subscription if any
+    await _favoritesSubscription?.cancel();
+
+    String uid = user.uid;
+    _favoritesSubscription = fireStore.collection('users').doc(uid).snapshots().listen((doc) {
       if (doc.exists) {
         List<dynamic> favorites = doc.data()?['favoriteVideos'] ?? [];
         _favoriteVideoIds.assignAll(favorites.cast<String>());

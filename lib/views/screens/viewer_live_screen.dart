@@ -89,6 +89,8 @@ class _ViewerLiveScreenState extends State<ViewerLiveScreen> {
       // Enable video
       await _engine.enableVideo();
 
+      await _engine.enableAudio();
+
       // Set client role as audience
       await _engine.setClientRole(role: ClientRoleType.clientRoleAudience);
 

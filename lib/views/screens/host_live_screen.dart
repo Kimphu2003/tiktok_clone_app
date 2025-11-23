@@ -99,6 +99,8 @@ class _HostLiveScreenState extends State<HostLiveScreen> {
 
       await _engine.enableVideo();
 
+      await _engine.enableAudio();
+
       await _engine.startPreview();
 
       // Set client role as broadcaster
@@ -269,7 +271,7 @@ class _HostLiveScreenState extends State<HostLiveScreen> {
                     padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -294,7 +296,7 @@ class _HostLiveScreenState extends State<HostLiveScreen> {
                     padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -314,7 +316,7 @@ class _HostLiveScreenState extends State<HostLiveScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -341,7 +343,7 @@ class _HostLiveScreenState extends State<HostLiveScreen> {
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    Colors.black.withOpacity(0.8),
+                    Colors.black.withValues(alpha: 0.8),
                     Colors.transparent,
                   ],
                 ),

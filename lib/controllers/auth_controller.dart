@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/controllers/upload_video_controller.dart';
+import 'package:tiktok_clone_app/controllers/video_controller.dart';
 import 'package:tiktok_clone_app/models/user_model.dart' as model;
 
 import '../utils.dart';
@@ -191,6 +192,9 @@ class AuthController extends GetxController {
         email: email,
         password: password,
       );
+
+      // Load user's favorite videos after successful login
+      Get.find<VideoController>().loadUserFavoriteVideos();
 
       Get.back();
     } catch (e) {

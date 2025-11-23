@@ -1,15 +1,20 @@
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:tiktok_clone_app/constants.dart';
+import 'package:tiktok_clone_app/controllers/comment_controller.dart';
 import 'package:tiktok_clone_app/controllers/livestream_controller.dart';
+import 'package:tiktok_clone_app/controllers/pip_controller.dart';
 import 'package:tiktok_clone_app/controllers/profile_controller.dart';
 import 'package:tiktok_clone_app/controllers/sound_controller.dart';
 import 'package:tiktok_clone_app/controllers/video_controller.dart';
+import 'package:tiktok_clone_app/helper/pip_overlay_manager.dart';
 import 'package:tiktok_clone_app/models/video_model.dart';
 import 'package:tiktok_clone_app/views/screens/add_friend_screen.dart';
+import 'package:tiktok_clone_app/views/screens/auth/login_screen.dart';
 import 'package:tiktok_clone_app/views/screens/edit_profile_detail_screen.dart';
 import 'package:tiktok_clone_app/views/screens/edit_profile_screen.dart';
 import 'package:tiktok_clone_app/views/screens/home_screen.dart';
@@ -23,11 +28,13 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   ).then((value) {
     Get.put(AuthController());
+    Get.put(CommentController());
     Get.put(ProfileController());
     Get.put(VideoController());
     Get.put(SoundController());
     Get.put(SoundController());
     Get.put(LiveStreamController());
+    Get.put(PipManager());
   });
   await Hive.initFlutter();
   Hive.registerAdapter(VideoModelAdapter());
@@ -47,9 +54,13 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: backgroundColor,
       ),
-      initialRoute: '/',
+      home: const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
       getPages: [
-        GetPage(name: '/', page: () => HomeScreen()),
+        GetPage(name: '/', page: () => const HomeScreen()),
         GetPage(name: '/details', page: () => EditProfileScreen()),
         GetPage(
           name: '/edit-profile-detail/profile-name',
