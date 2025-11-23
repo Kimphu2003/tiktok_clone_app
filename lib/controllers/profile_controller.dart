@@ -94,59 +94,62 @@ class ProfileController extends GetxController {
   }
 
   Future<void> followUser(String targetUid) async {
-    var doc =
+    // Optimistic Update
+    bool isCurrentlyFollowing = _user.value['isFollowing'];
+    int currentFollowers = int.parse(_user.value['followers']);
+    
+    // Update local state immediately
+    _user.value.update('isFollowing', (value) => !isCurrentlyFollowing);
+    _user.value.update(
+      'followers',
+      (value) => (isCurrentlyFollowing ? currentFollowers - 1 : currentFollowers + 1).toString(),
+    );
+    update();
+
+    try {
+      var doc = await fireStore
+          .collection('users')
+          .doc(targetUid)
+          .collection('followers')
+          .doc(authController.user.uid)
+          .get();
+
+      if (!doc.exists) {
         await fireStore
             .collection('users')
             .doc(targetUid)
             .collection('followers')
             .doc(authController.user.uid)
-            .get();
-    if (!doc.exists) {
-      await fireStore
-          .collection('users')
-          .doc(targetUid)
-          .collection('followers')
-          .doc(authController.user.uid)
-          .set({});
+            .set({});
 
-      await fireStore
-          .collection('users')
-          .doc(authController.user.uid)
-          .collection('following')
-          .doc(_uid.value)
-          .set({});
+        await fireStore
+            .collection('users')
+            .doc(authController.user.uid)
+            .collection('following')
+            .doc(targetUid)
+            .set({});
+      } else {
+        await fireStore
+            .collection('users')
+            .doc(targetUid)
+            .collection('followers')
+            .doc(authController.user.uid)
+            .delete();
 
-      _user.value.update(
-        'followers',
-        (value) => (int.parse(value) + 1).toString(),
-      );
-    } else {
-      await fireStore
-          .collection('users')
-          .doc(targetUid)
-          .collection('followers')
-          .doc(authController.user.uid)
-          .delete();
-
-      await fireStore
-          .collection('users')
-          .doc(authController.user.uid)
-          .collection('following')
-          .doc(targetUid)
-          .delete();
-
-      _user.value.update(
-        'followers',
-        (value) => (int.parse(value) - 1).toString(),
-      );
+        await fireStore
+            .collection('users')
+            .doc(authController.user.uid)
+            .collection('following')
+            .doc(targetUid)
+            .delete();
+      }
+    } catch (e) {
+      // Revert if failed
+      _user.value.update('isFollowing', (value) => isCurrentlyFollowing);
+      _user.value.update('followers', (value) => currentFollowers.toString());
+      update();
+      Get.snackbar('Error', 'Failed to update follow status');
     }
-
-    if(_uid.value == targetUid) {
-      await getUserData();
-    }
-
-    _user.value.update('isFollowing', (value) => !value);
-    update();
   }
 
   Future<bool> isFollowing(String targetUid) async {

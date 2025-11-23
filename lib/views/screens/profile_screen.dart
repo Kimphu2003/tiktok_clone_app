@@ -105,10 +105,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: isLive ? Colors.red : Colors.transparent,
-                            border: isLive ? Border.all(
-                              color: Colors.red,
-                              width: 3,
-                            ) : null,
+                            border:
+                                isLive
+                                    ? Border.all(color: Colors.red, width: 3)
+                                    : null,
                           ),
                           child: ClipOval(
                             child: CachedNetworkImage(
@@ -136,7 +136,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               decoration: BoxDecoration(
                                 color: Colors.red,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
                               ),
                               child: Text(
                                 'LIVE',
@@ -149,55 +152,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         widget.uid == authController.user.uid
-                            ?
-                        Positioned(
-                          right: -5,
-                          bottom: 0,
-                          child: Container(
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            child: InkWell(
-                              onTap: () async {
-                                final pickedImage = await pickImage();
-                                if (pickedImage != null) {
-                                  final croppedImage =
-                                      await Navigator.push<File?>(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (_) => AvatarSelectPage(
-                                                imageFile: pickedImage,
-                                              ),
-                                        ),
-                                      );
-                                  if (croppedImage != null) {
-                                    final imageUrl =
-                                        await UploadVideoController.uploadToCloudinary(
-                                          croppedImage,
-                                          'image',
-                                        );
-                                    if (imageUrl != null) {
-                                      profileController.user['profilePhoto'] =
-                                          imageUrl;
-                                      setState(() {
-                                        controller.profilePhoto.value =
-                                            imageUrl;
-                                      });
+                            ? Positioned(
+                              right: -5,
+                              bottom: 0,
+                              child: Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                child: InkWell(
+                                  onTap: () async {
+                                    final pickedImage = await pickImage();
+                                    if (pickedImage != null) {
+                                      final croppedImage =
+                                          await Navigator.push<File?>(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (_) => AvatarSelectPage(
+                                                    imageFile: pickedImage,
+                                                  ),
+                                            ),
+                                          );
+                                      if (croppedImage != null) {
+                                        final imageUrl =
+                                            await UploadVideoController.uploadToCloudinary(
+                                              croppedImage,
+                                              'image',
+                                            );
+                                        if (imageUrl != null) {
+                                          profileController
+                                                  .user['profilePhoto'] =
+                                              imageUrl;
+                                          setState(() {
+                                            controller.profilePhoto.value =
+                                                imageUrl;
+                                          });
+                                        }
+                                      }
                                     }
-                                  }
-                                }
-                              },
-                              child:const Icon(
-                                Icons.add_circle,
-                                color: Colors.cyanAccent,
+                                  },
+                                  child: const Icon(
+                                    Icons.add_circle,
+                                    color: Colors.cyanAccent,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ) : const SizedBox(),
+                            )
+                            : const SizedBox(),
                       ],
                     ),
                   ),
@@ -550,7 +554,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     GestureDetector(
-                      onTap: () => authController.signOut(),
+                      onTap: () {
+                        authController.signOut();
+                        Get.back();
+                      },
                       child: ListTile(
                         leading: const Icon(
                           Icons.logout_outlined,
@@ -571,6 +578,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             )
             : Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
                   leading: const Icon(Icons.report, color: Colors.white),
