@@ -7,6 +7,8 @@ import 'package:get/get.dart';
 class VideoPlayerItem extends StatefulWidget {
   final String videoUrl;
   final String videoId;
+  final String? username;
+  final String? caption;
   final ValueNotifier<double> downloadProgress;
   final ValueNotifier<bool> compactModeNotifier;
   final ValueNotifier<double> speedNotifier;
@@ -17,6 +19,8 @@ class VideoPlayerItem extends StatefulWidget {
     super.key,
     required this.videoUrl,
     required this.videoId,
+    this.username,
+    this.caption,
     required this.downloadProgress,
     required this.speedNotifier,
     required this.compactModeNotifier,
@@ -91,6 +95,12 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+    videoPlayerController.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return Container(
@@ -134,6 +144,8 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
                           context,
                           widget.videoId,
                           widget.videoUrl,
+                          widget.username ?? '',
+                          widget.caption ?? '',
                           widget.downloadProgress,
                           widget.compactModeNotifier,
                           widget.speedNotifier,
@@ -144,10 +156,11 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
                         VideoPlayer(videoPlayerController),
                         if (!videoPlayerController.value.isPlaying)
                           Center(
-                            child: const Icon(
+                            child: Icon(
                               Icons.play_arrow_sharp,
                               color: Colors.white,
-                              size: 100,
+                              // Smaller icon in PiP mode
+                              size: size.width < 500 && size.height < 300 ? 40 : 100,
                             ),
                           ),
                         Positioned(
