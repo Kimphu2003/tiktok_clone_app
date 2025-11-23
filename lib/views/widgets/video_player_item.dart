@@ -7,6 +7,8 @@ import 'package:get/get.dart';
 class VideoPlayerItem extends StatefulWidget {
   final String videoUrl;
   final String videoId;
+  final String? username;
+  final String? caption;
   final ValueNotifier<double> downloadProgress;
   final ValueNotifier<bool> compactModeNotifier;
   final ValueNotifier<double> speedNotifier;
@@ -17,6 +19,8 @@ class VideoPlayerItem extends StatefulWidget {
     super.key,
     required this.videoUrl,
     required this.videoId,
+    this.username,
+    this.caption,
     required this.downloadProgress,
     required this.speedNotifier,
     required this.compactModeNotifier,
@@ -54,7 +58,7 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
         }
       });
 
-    if(widget.isAutomaticallyScroll != null) {
+    if (widget.isAutomaticallyScroll != null) {
       videoPlayerController.setLooping(false);
     }
 
@@ -88,6 +92,12 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return '$minutes:$seconds';
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    videoPlayerController.dispose();
   }
 
   @override
@@ -134,6 +144,8 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
                           context,
                           widget.videoId,
                           widget.videoUrl,
+                          widget.username ?? '',
+                          widget.caption ?? '',
                           widget.downloadProgress,
                           widget.compactModeNotifier,
                           widget.speedNotifier,
@@ -144,10 +156,14 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
                         VideoPlayer(videoPlayerController),
                         if (!videoPlayerController.value.isPlaying)
                           Center(
-                            child: const Icon(
+                            child: Icon(
                               Icons.play_arrow_sharp,
                               color: Colors.white,
-                              size: 100,
+                              // Smaller icon in PiP mode
+                              size:
+                                  size.width < 500 && size.height < 300
+                                      ? 40
+                                      : 100,
                             ),
                           ),
                         Positioned(
@@ -155,7 +171,10 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
                           left: 0,
                           right: 0,
                           child: AnimatedOpacity(
-                            opacity: _showControls || _isDragging || _isPause ? 1.0 : 0.0,
+                            opacity:
+                                _showControls || _isDragging || _isPause
+                                    ? 1.0
+                                    : 0.0,
                             duration: Duration(milliseconds: 300),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -167,7 +186,7 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
                                   begin: Alignment.bottomCenter,
                                   end: Alignment.topCenter,
                                   colors: [
-                                    Colors.black.withOpacity(0.7),
+                                    Colors.black.withValues(alpha: 0.7),
                                     Colors.transparent,
                                   ],
                                 ),
@@ -186,10 +205,10 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
                                       ),
                                       activeTrackColor: Colors.white,
                                       inactiveTrackColor: Colors.white
-                                          .withOpacity(0.3),
+                                          .withValues(alpha: 0.3),
                                       thumbColor: Colors.white,
-                                      overlayColor: Colors.white.withOpacity(
-                                        0.2,
+                                      overlayColor: Colors.white.withValues(
+                                        alpha: 0.2,
                                       ),
                                     ),
                                     child: Slider(

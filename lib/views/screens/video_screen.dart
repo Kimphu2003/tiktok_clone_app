@@ -3,8 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tiktok_clone_app/constants.dart';
+import 'package:tiktok_clone_app/controllers/pip_controller.dart';
+import 'package:tiktok_clone_app/helper/pip_overlay_manager.dart';
 import 'package:tiktok_clone_app/models/video_model.dart';
-import 'package:tiktok_clone_app/views/screens/comment_screen.dart';
+import 'package:tiktok_clone_app/views/widgets/comment_bottom_sheet.dart';
 import 'package:tiktok_clone_app/views/screens/profile_screen.dart';
 import 'package:tiktok_clone_app/views/screens/search_screen.dart';
 import 'package:tiktok_clone_app/views/screens/sound_detail_screen.dart';
@@ -26,6 +28,7 @@ class VideoScreen extends StatefulWidget {
 class _VideoScreenState extends State<VideoScreen> {
   final VideoController videoController = Get.find();
   final SoundController soundController = Get.find();
+
   final PageController _pageController = PageController(initialPage: 1);
   final PageController _forYouController = PageController(initialPage: 0);
   final PageController _followingController = PageController(initialPage: 0);
@@ -53,6 +56,12 @@ class _VideoScreenState extends State<VideoScreen> {
     isAutomaticallyScroll = ValueNotifier(false);
 
     fetchCurrentUserFollowers();
+
+    final pipManager = PipManager.instance;
+    final videoId = pipManager.currentVideoId.value;
+    if (pipManager.isVideoInPip(videoId)) {
+      pipManager.exitPipMode(disposeController: false);
+    }
   }
 
   @override
@@ -61,6 +70,9 @@ class _VideoScreenState extends State<VideoScreen> {
     isCompactMode.dispose();
     speedNotifier.dispose();
     isAutomaticallyScroll.dispose();
+    _pageController.dispose();
+    _forYouController.dispose();
+    _followingController.dispose();
     super.dispose();
   }
 
@@ -102,80 +114,100 @@ class _VideoScreenState extends State<VideoScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.only(top: 45.0),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  InkWell(
-                    onTap: () => Get.to(() => const LiveStreamsScreen()),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        const Icon(
-                          CupertinoIcons.tv,
-                          size: 33,
-                          color: Colors.white,
+    // Adjust threshold for larger PiP window (16:9 aspect ratio)
+    final isInPipMode = size.width < 500 && size.height < 300;
+
+    return PipOverlayWrapper(
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            return Stack(
+              children: [
+                // Layer 1: Video Feed (Full Screen)
+                PageView(
+                  controller: _pageController,
+                  onPageChanged:
+                      (index) => setState(() => _selectedIndex = index),
+                  scrollDirection: Axis.vertical,
+                  children: [
+                    _buildFeed(
+                      size,
+                      'Đang theo dõi',
+                      _followingController,
+                      isInPipMode,
+                    ),
+                    _buildFeed(
+                      size,
+                      'Dành cho bạn',
+                      _forYouController,
+                      isInPipMode,
+                    ),
+                  ],
+                ),
+
+                // Layer 2: Top Navigation Bar (Overlay)
+                if (!isInPipMode)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 8.0,
                         ),
-                        Text(
-                          'LIVE',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            InkWell(
+                              onTap:
+                                  () => Get.to(() => const LiveStreamsScreen()),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  const Icon(
+                                    CupertinoIcons.tv,
+                                    size: 33,
+                                    color: Colors.white,
+                                  ),
+                                  Text(
+                                    'LIVE',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            _buildTab('Đang theo dõi', 0),
+                            _buildTab('Dành cho bạn', 1),
+                            InkWell(
+                              onTap:
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => SearchScreen(),
+                                    ),
+                                  ),
+                              child: const Icon(
+                                CupertinoIcons.search,
+                                size: 30,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                  const Divider(),
-                  _buildTab('Đang theo dõi', 0),
-                  _buildTab('Dành cho bạn', 1),
-                  const Divider(),
-                  InkWell(
-                    onTap:
-                        () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => SearchScreen()),
-                        ),
-                    child: const Icon(
-                      CupertinoIcons.search,
-                      size: 30,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged:
-                    (index) => setState(() => _selectedIndex = index),
-                children: [
-                  _buildFeed(size, 'Đang theo dõi', _followingController),
-                  _buildFeed(size, 'Dành cho bạn', _forYouController),
-                ],
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed:
-      //       () =>
-      //           throw UnimplementedError(
-      //             'Go Live functionality not implemented',
-      //           ),
-      //   child: const Icon(Icons.add, color: Colors.white),
-      //   backgroundColor: Colors.red,
-      // ),
     );
   }
 
@@ -202,7 +234,7 @@ class _VideoScreenState extends State<VideoScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? Colors.white : Colors.grey,
+              color: isSelected ? Colors.white : Colors.grey[900],
             ),
           ),
           isSelected
@@ -223,7 +255,12 @@ class _VideoScreenState extends State<VideoScreen> {
     );
   }
 
-  Obx _buildFeed(Size size, String label, PageController controller) {
+  Obx _buildFeed(
+    Size size,
+    String label,
+    PageController controller,
+    bool isInPipMode,
+  ) {
     return Obx(() {
       final allVideos = videoController.videoList;
 
@@ -235,8 +272,20 @@ class _VideoScreenState extends State<VideoScreen> {
       }
 
       final filteredVideos = cachedFilteredVideos(label);
-      if (_selectedIndex == 1 && filteredVideos.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
+      if (filteredVideos.isEmpty) {
+        return const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(height: 16),
+              Text(
+                'Loading videos...',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ],
+          ),
+        );
       }
       return PageView.builder(
         itemCount: filteredVideos.length,
@@ -266,238 +315,438 @@ class _VideoScreenState extends State<VideoScreen> {
                   }
                 },
               ),
-              Column(
-                children: [
-                  const SizedBox(height: 100),
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Expanded(
-                          child: Container(
-                            margin: const EdgeInsets.only(left: 20, bottom: 50),
-                            // color: Colors.grey,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                InkWell(
-                                  onTap:
-                                      () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (_) =>
-                                                  ProfileScreen(uid: data.uid),
-                                        ),
+              // TikTok-style PiP layout - clickable overlay
+              if (isInPipMode)
+                IgnorePointer(
+                  ignoring: false, // Allow interactions with this layer
+                  child: Stack(
+                    children: [
+                      // Right side action buttons (vertical) - more compact
+                      Positioned(
+                        right: 6,
+                        top: 20,
+                        bottom: 50,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Mute/Unmute button
+                              _buildCompactButton(
+                                icon: Icons.volume_up,
+                                color: Colors.white,
+                                onTap: () {
+                                  debugPrint('🔊 Mute button tapped');
+                                  Get.snackbar(
+                                    'Volume',
+                                    'Volume control',
+                                    snackPosition: SnackPosition.TOP,
+                                    duration: const Duration(seconds: 1),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 6),
+
+                              // Scroll down button
+                              _buildCompactButton(
+                                icon: Icons.keyboard_arrow_down,
+                                color: Colors.white,
+                                onTap: () {
+                                  debugPrint('⬇️ Scroll down button tapped');
+                                  if (index + 1 < filteredVideos.length) {
+                                    controller.nextPage(
+                                      duration: const Duration(
+                                        milliseconds: 300,
                                       ),
-                                  child: Text(
-                                    data.username,
-                                    style: const TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
+                                      curve: Curves.easeInOut,
+                                    );
+                                  }
+                                },
+                              ),
+                              const SizedBox(height: 6),
+
+                              // Profile picture - smaller
+                              GestureDetector(
+                                onTap: () {
+                                  debugPrint('👤 Profile picture tapped');
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => ProfileScreen(uid: data.uid),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
                                       color: Colors.white,
+                                      width: 1.5,
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(14.5),
+                                    child: Image.network(
+                                      data.profilePhoto,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (
+                                        context,
+                                        error,
+                                        stacktrace,
+                                      ) {
+                                        return Container(
+                                          color: Colors.grey[800],
+                                          child: const Icon(
+                                            Icons.person,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ),
-                                Text(
-                                  data.caption,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.music_note,
-                                      size: 15,
-                                      color: Colors.grey,
-                                    ),
-                                    Text(
-                                      data.songName,
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(height: 6),
+
+                              // Like button with count
+                              _buildCompactButtonWithCount(
+                                icon: Icons.favorite,
+                                count: data.likes.length,
+                                color:
+                                    data.likes.contains(authController.user.uid)
+                                        ? Colors.red
+                                        : Colors.white,
+                                onTap: () {
+                                  debugPrint('❤️ Like button tapped');
+                                  videoController.likeVideo(data.videoId);
+                                },
+                              ),
+                              const SizedBox(height: 6),
+
+                              // Bookmark/Favorite button with count
+                              _buildCompactButtonWithCount(
+                                icon: Icons.bookmark,
+                                count: data.favoriteCount,
+                                color:
+                                    videoController.isVideoFavorited(
+                                          data.videoId,
+                                        )
+                                        ? Colors.yellow
+                                        : Colors.white,
+                                onTap: () {
+                                  debugPrint('🔖 Bookmark button tapped');
+                                  videoController.toggleFavoriteVideo(
+                                    data.videoId,
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 6),
+
+                              // Share button with count
+                              _buildCompactButtonWithCount(
+                                icon: Icons.share,
+                                count: data.shareCount,
+                                color: Colors.white,
+                                onTap: () {
+                                  debugPrint('🔗 Share button tapped');
+                                  Get.snackbar(
+                                    'Share',
+                                    'Share feature',
+                                    snackPosition: SnackPosition.TOP,
+                                    duration: const Duration(seconds: 1),
+                                  );
+                                },
+                              ),
+                            ],
                           ),
                         ),
+                      ),
 
-                        ValueListenableBuilder(
-                          valueListenable: isCompactMode,
-                          builder: (context, bool isCompact, _) {
-                            return isCompact
-                                ? Container(
-                                  width: 100,
-                                  margin: EdgeInsets.only(
-                                    top: size.height / 6.5,
+                      // Bottom left - Username and caption (more compact)
+                      Positioned(
+                        left: 8,
+                        right: 50,
+                        bottom: 8,
+                        child: IgnorePointer(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Username
+                              Text(
+                                '@${data.username}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              // Caption
+                              Text(
+                                data.caption,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                // Full UI in normal mode
+                Column(
+                  children: [
+                    const SizedBox(height: 100),
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.only(
+                                left: 20,
+                                bottom: 50,
+                              ),
+                              // color: Colors.grey,
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  InkWell(
+                                    onTap:
+                                        () => Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (_) => ProfileScreen(
+                                                  uid: data.uid,
+                                                ),
+                                          ),
+                                        ),
+                                    child: Text(
+                                      data.username,
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ),
-                                  child: Stack(
+                                  Text(
+                                    data.caption,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  Row(
                                     children: [
-                                      Positioned(
-                                        bottom: 20,
-                                        right: 10,
-                                        child: Container(
-                                          width: 45,
-                                          height: 45,
-                                          decoration: BoxDecoration(
-                                            color: Colors.black.withOpacity(
-                                              0.3,
-                                            ),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: InkWell(
-                                            onTap: () {
-                                              setState(() {
-                                                isCompactMode.value = false;
-                                              });
-                                            },
-                                            child: const Icon(
-                                              Icons.phone_android_outlined,
-                                              color: Colors.white,
-                                            ),
-                                          ),
+                                      const Icon(
+                                        Icons.music_note,
+                                        size: 15,
+                                        color: Colors.grey,
+                                      ),
+                                      Text(
+                                        data.songName,
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.grey,
                                         ),
                                       ),
                                     ],
                                   ),
-                                )
-                                : Container(
-                                  width: 100,
-                                  // color: Colors.red,
-                                  margin: EdgeInsets.only(
-                                    top: size.height / 6.5,
-                                    bottom: 50,
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      buildProfile(data.profilePhoto, data.uid),
-                                      const SizedBox(height: 10),
-                                      _buildActionButton(
-                                        icon: Icons.favorite,
-                                        count: data.likes.length,
-                                        color:
-                                            data.likes.contains(
-                                                  authController.user.uid,
-                                                )
-                                                ? Colors.red
-                                                : Colors.white,
-                                        onTap:
-                                            () => videoController.likeVideo(
-                                              data.videoId,
-                                            ),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      _buildActionButton(
-                                        icon: Icons.comment_rounded,
-                                        count: data.commentCount,
-                                        onTap:
-                                            () => Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (_) => CommentScreen(
-                                                      videoId: data.videoId,
-                                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          ValueListenableBuilder(
+                            valueListenable: isCompactMode,
+                            builder: (context, bool isCompact, _) {
+                              return isCompact
+                                  ? Container(
+                                    width: 100,
+                                    margin: EdgeInsets.only(
+                                      top: size.height / 6.5,
+                                    ),
+                                    child: Stack(
+                                      children: [
+                                        Positioned(
+                                          bottom: 20,
+                                          right: 10,
+                                          child: Container(
+                                            width: 45,
+                                            height: 45,
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.3,
                                               ),
+                                              shape: BoxShape.circle,
                                             ),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Obx(() {
-                                        return _buildActionButton(
-                                          icon:
-                                              videoController.isVideoFavorited(
-                                                    data.videoId,
-                                                  )
-                                                  ? Icons.bookmark
-                                                  : Icons.bookmark_border,
-                                          count: data.favoriteCount,
-                                          color:
-                                              videoController.isVideoFavorited(
-                                                    data.videoId,
-                                                  )
-                                                  ? Colors.yellow
-                                                  : Colors.white,
-                                          onTap:
-                                              () => videoController
-                                                  .toggleFavoriteVideo(
-                                                    data.videoId,
-                                                  ),
-                                        );
-                                      }),
-                                      const SizedBox(height: 10),
-                                      _buildActionButton(
-                                        icon: Icons.reply,
-                                        count: data.shareCount,
-                                        onTap:
-                                            () => tiktokBottomSheet
-                                                .showShareBottomSheet(
-                                                  context,
-                                                  data.videoId,
-                                                  data.videoUrl,
-                                                  downloadProgress,
-                                                  isCompactMode,
-                                                  speedNotifier,
-                                              isAutomaticallyScroll,
-                                                ),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          GestureDetector(
-                                            onTap: () async {
-                                              final soundId = data.soundId;
-                                              if (soundId != null) {
-                                                final sound =
-                                                    await soundController
-                                                        .getSoundById(soundId);
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder:
-                                                        (_) =>
-                                                            SoundDetailScreen(
-                                                              sound: sound!,
-                                                            ),
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                right: 12.0,
-                                              ),
-                                              child: CircleAnimation(
-                                                child: buildMusicAlbum(
-                                                  data.thumbnail!,
-                                                ),
+                                            child: InkWell(
+                                              onTap: () {
+                                                setState(() {
+                                                  isCompactMode.value = false;
+                                                });
+                                              },
+                                              child: const Icon(
+                                                Icons.phone_android_outlined,
+                                                color: Colors.white,
                                               ),
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 10),
-                                    ],
-                                  ),
-                                );
-                          },
-                        ),
-                      ],
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                  : Container(
+                                    width: 100,
+                                    // color: Colors.red,
+                                    margin: EdgeInsets.only(
+                                      top: size.height / 6.5,
+                                      bottom: 50,
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        buildProfile(
+                                          data.profilePhoto,
+                                          data.uid,
+                                        ),
+                                        const SizedBox(height: 10),
+                                        _buildActionButton(
+                                          icon: Icons.favorite,
+                                          count: data.likes.length,
+                                          color:
+                                              data.likes.contains(
+                                                    authController.user.uid,
+                                                  )
+                                                  ? Colors.red
+                                                  : Colors.white,
+                                          onTap:
+                                              () => videoController.likeVideo(
+                                                data.videoId,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        _buildActionButton(
+                                          icon: Icons.comment_rounded,
+                                          count: data.commentCount,
+                                          onTap:
+                                              () => showCommentBottomSheet(
+                                                context,
+                                                data.videoId,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        Obx(() {
+                                          return _buildActionButton(
+                                            icon:
+                                                videoController
+                                                        .isVideoFavorited(
+                                                          data.videoId,
+                                                        )
+                                                    ? Icons.bookmark
+                                                    : Icons.bookmark_border,
+                                            count: data.favoriteCount,
+                                            color:
+                                                videoController
+                                                        .isVideoFavorited(
+                                                          data.videoId,
+                                                        )
+                                                    ? Colors.yellow
+                                                    : Colors.white,
+                                            onTap:
+                                                () => videoController
+                                                    .toggleFavoriteVideo(
+                                                      data.videoId,
+                                                    ),
+                                          );
+                                        }),
+                                        const SizedBox(height: 10),
+                                        _buildActionButton(
+                                          icon: Icons.reply,
+                                          count: data.shareCount,
+                                          onTap:
+                                              () => tiktokBottomSheet
+                                                  .showShareBottomSheet(
+                                                    context,
+                                                    data.videoId,
+                                                    data.videoUrl,
+                                                    data.username,
+                                                    data.caption,
+                                                    downloadProgress,
+                                                    isCompactMode,
+                                                    speedNotifier,
+                                                    isAutomaticallyScroll,
+                                                  ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            GestureDetector(
+                                              onTap: () async {
+                                                final soundId = data.soundId;
+                                                if (soundId != null) {
+                                                  final sound =
+                                                      await soundController
+                                                          .getSoundById(
+                                                            soundId,
+                                                          );
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (_) =>
+                                                              SoundDetailScreen(
+                                                                sound: sound!,
+                                                              ),
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(
+                                                  right: 12.0,
+                                                ),
+                                                child: CircleAnimation(
+                                                  child: buildMusicAlbum(
+                                                    data.thumbnail!,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 10),
+                                      ],
+                                    ),
+                                  );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
               ValueListenableBuilder<double>(
                 valueListenable: downloadProgress,
                 builder: (context, progress, _) {
@@ -676,4 +925,77 @@ class _VideoScreenState extends State<VideoScreen> {
       ],
     );
   }
+
+  // Helper method to build TikTok-style circular buttons
+  Widget _buildTikTokButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.4),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: color, size: 22),
+      ),
+    );
+  }
+
+  // Compact button for PiP mode (smaller)
+  Widget _buildCompactButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.4),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: color, size: 18),
+      ),
+    );
+  }
+
+  // Compact button with count for PiP mode
+  Widget _buildCompactButtonWithCount({
+    required IconData icon,
+    required int count,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildCompactButton(icon: icon, color: color, onTap: onTap),
+        const SizedBox(height: 2),
+        Text(
+          count > 999 ? '${(count / 1000).toStringAsFixed(1)}K' : '$count',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Keep the old method for compatibility
+  // Widget _buildPipButton({
+  //   required IconData icon,
+  //   required Color color,
+  //   required VoidCallback onTap,
+  // }) {
+  //   return _buildTikTokButton(icon: icon, color: color, onTap: onTap);
+  // }
 }

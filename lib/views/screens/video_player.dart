@@ -12,7 +12,7 @@ import '../../constants.dart';
 import '../widgets/circle_animation.dart';
 import '../widgets/tiktok_bottom_sheet.dart';
 import '../widgets/video_player_item.dart';
-import 'comment_screen.dart';
+import '../widgets/comment_bottom_sheet.dart';
 
 class VideoPlayer extends StatefulWidget {
   final Map<String, dynamic> videoData;
@@ -177,18 +177,10 @@ class _VideoPlayerState extends State<VideoPlayer> {
                                       _buildActionButton(
                                         icon: Icons.comment_rounded,
                                         count: widget.videoData['commentCount'],
-                                        onTap:
-                                            () => Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (_) => CommentScreen(
-                                                      videoId:
-                                                          widget
-                                                              .videoData['videoId'],
-                                                    ),
-                                              ),
-                                            ),
+                                        onTap: () => showCommentBottomSheet(
+                                          context,
+                                          widget.videoData['videoId'],
+                                        ),
                                       ),
                                       const SizedBox(height: 20),
                                       Obx(() {
@@ -224,6 +216,8 @@ class _VideoPlayerState extends State<VideoPlayer> {
                                                   context,
                                                   widget.videoData['videoId'],
                                                   widget.videoData['videoUrl'],
+                                                  widget.videoData['username'],
+                                                  widget.videoData['caption'],
                                                   downloadProgress,
                                                   compactModeNotifier,
                                                   speedNotifier,
