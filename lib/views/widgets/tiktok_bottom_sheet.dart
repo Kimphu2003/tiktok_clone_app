@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:tiktok_clone_app/controllers/pip_controller.dart';
 
 import '../../controllers/video_controller.dart';
 
@@ -14,10 +16,12 @@ class TikTokBottomSheet {
     BuildContext context,
     String videoId,
     String videoUrl,
+    String? username,
+    String? caption,
     ValueNotifier<double>? downloadProgress,
     ValueNotifier<bool>? isCompactMode,
     ValueNotifier<double>? speedNotifier,
-      ValueNotifier<bool>? isAutoScrollEnabled,
+    ValueNotifier<bool>? isAutoScrollEnabled,
   ) {
     showModalBottomSheet(
       context: context,
@@ -96,6 +100,15 @@ class TikTokBottomSheet {
                       label: "Dùng Trình tiết kiệm",
                       videoId: videoId,
                     ),
+                    _ActionButton(
+                      context: context,
+                      icon: Icons.picture_in_picture_alt,
+                      label: "Chế độ PiP",
+                      videoId: videoId,
+                      videoUrl: videoUrl,
+                      username: username,
+                      caption: caption,
+                    ),
                   ],
                 ),
 
@@ -143,10 +156,12 @@ class TikTokBottomSheet {
     required String label,
     required String videoId,
     String? videoUrl,
+    String? username,
+    String? caption,
     ValueNotifier<double>? downloadProgress,
     ValueNotifier<bool>? compactModeNotifier,
     ValueNotifier<double>? speedNotifier,
-ValueNotifier<bool>? isAutoScrollEnabled,
+    ValueNotifier<bool>? isAutoScrollEnabled,
   }) {
     return Column(
       mainAxisSize: MainAxisSize.max,
@@ -182,7 +197,7 @@ ValueNotifier<bool>? isAutoScrollEnabled,
                       : 'Đã tắt chế độ xem gọn.',
                 );
               }
-            } else if(label == 'Cuộn tự động') {
+            } else if (label == 'Cuộn tự động') {
               Navigator.pop(context);
               if (isAutoScrollEnabled != null) {
                 isAutoScrollEnabled.value = !(isAutoScrollEnabled.value);
@@ -193,11 +208,29 @@ ValueNotifier<bool>? isAutoScrollEnabled,
                       : 'Đã tắt cuộn tự động.',
                 );
               }
-
-              // Get.snackbar(label, 'Chức năng "$label" chưa được triển khai.');
-
-            }
-            else {
+            } else if (label == 'Chế độ PiP') {
+              final pipManager = PipManager.instance;
+              if (videoUrl == null || username == null || caption == null) {
+                Get.snackbar(
+                  'Error',
+                  'Không thể khởi động chế độ PiP do thiếu dữ liệu video.',
+                );
+                return;
+              }
+              Navigator.pop(context);
+              
+              // Use native Android PiP mode instead of in-app overlay
+              final success = await pipManager.nativePip.enterNativePip();
+              if (success) {
+                debugPrint('✅ Entered native PiP mode - app will minimize automatically');
+              } else {
+                Get.snackbar(
+                  'PiP Not Available',
+                  'Picture-in-Picture is not supported on this device (requires Android 8.0+)',
+                  snackPosition: SnackPosition.BOTTOM,
+                );
+              }
+            } else {
               Navigator.pop(context);
               Get.snackbar(label, 'Chức năng "$label" chưa được triển khai.');
             }
@@ -228,9 +261,9 @@ ValueNotifier<bool>? isAutoScrollEnabled,
   }
 
   _displaySpeedOptions(
-      BuildContext context,
-      ValueNotifier<double>? speedNotifier,
-      ) {
+    BuildContext context,
+    ValueNotifier<double>? speedNotifier,
+  ) {
     double currentSpeed = speedNotifier?.value ?? 1.0;
 
     showModalBottomSheet(
@@ -267,32 +300,35 @@ ValueNotifier<bool>? isAutoScrollEnabled,
                           "${speed}x",
                           style: const TextStyle(color: Colors.white),
                         ),
-                        trailing: isSelectedSpeed(speed)
-                            ? Container(
-                          width: 36,
-                          height: 36,
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Container(
-                            width: 20,
-                            height: 20,
-                            margin: const EdgeInsets.all(6),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        )
-                            : Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[700]!),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
+                        trailing:
+                            isSelectedSpeed(speed)
+                                ? Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Container(
+                                    width: 20,
+                                    height: 20,
+                                    margin: const EdgeInsets.all(6),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                )
+                                : Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.grey[700]!,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
                         onTap: () {
                           setState(() => currentSpeed = speed);
                           speedNotifier?.value = speed;
