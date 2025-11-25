@@ -412,37 +412,47 @@ class _VideoScreenState extends State<VideoScreen> {
                               const SizedBox(height: 6),
 
                               // Like button with count
-                              _buildCompactButtonWithCount(
-                                icon: Icons.favorite,
-                                count: data.likes.length,
-                                color:
-                                    data.likes.contains(authController.user.uid)
-                                        ? Colors.red
-                                        : Colors.white,
-                                onTap: () {
-                                  debugPrint('❤️ Like button tapped');
-                                  videoController.likeVideo(data.videoId);
-                                },
-                              ),
+                              Obx(() {
+                                final likes = videoController.getVideoLikes(
+                                  data.videoId,
+                                );
+                                final isLiked = videoController.isVideoLiked(
+                                  data.videoId,
+                                );
+                                return _buildCompactButtonWithCount(
+                                  icon: Icons.favorite,
+                                  count: likes.length,
+                                  color: isLiked ? Colors.red : Colors.white,
+                                  onTap: () {
+                                    debugPrint('❤️ Like button tapped');
+                                    videoController.likeVideo(data.videoId);
+                                  },
+                                );
+                              }),
                               const SizedBox(height: 6),
 
                               // Bookmark/Favorite button with count
-                              _buildCompactButtonWithCount(
-                                icon: Icons.bookmark,
-                                count: data.favoriteCount,
-                                color:
-                                    videoController.isVideoFavorited(
-                                          data.videoId,
-                                        )
-                                        ? Colors.yellow
-                                        : Colors.white,
-                                onTap: () {
-                                  debugPrint('🔖 Bookmark button tapped');
-                                  videoController.toggleFavoriteVideo(
-                                    data.videoId,
-                                  );
-                                },
-                              ),
+                              Obx(() {
+                                final favoriteCount = videoController
+                                    .getVideoFavoriteCount(data.videoId);
+                                final isFavorited = videoController
+                                    .isVideoFavorited(data.videoId);
+
+                                return _buildCompactButtonWithCount(
+                                  icon: Icons.bookmark,
+                                  count: favoriteCount,
+                                  color:
+                                      isFavorited
+                                          ? Colors.yellow
+                                          : Colors.white,
+                                  onTap: () {
+                                    debugPrint('🔖 Bookmark button tapped');
+                                    videoController.toggleFavoriteVideo(
+                                      data.videoId,
+                                    );
+                                  },
+                                );
+                              }),
                               const SizedBox(height: 6),
 
                               // Share button with count
@@ -630,20 +640,24 @@ class _VideoScreenState extends State<VideoScreen> {
                                           data.uid,
                                         ),
                                         const SizedBox(height: 10),
-                                        _buildActionButton(
-                                          icon: Icons.favorite,
-                                          count: data.likes.length,
-                                          color:
-                                              data.likes.contains(
-                                                    authController.user.uid,
-                                                  )
-                                                  ? Colors.red
-                                                  : Colors.white,
-                                          onTap:
-                                              () => videoController.likeVideo(
-                                                data.videoId,
-                                              ),
-                                        ),
+                                        Obx(() {
+                                          final likes = videoController
+                                              .getVideoLikes(data.videoId);
+                                          final isLiked = videoController
+                                              .isVideoLiked(data.videoId);
+                                          return _buildActionButton(
+                                            icon: Icons.favorite,
+                                            count: likes.length,
+                                            color:
+                                                isLiked
+                                                    ? Colors.red
+                                                    : Colors.white,
+                                            onTap:
+                                                () => videoController.likeVideo(
+                                                  data.videoId,
+                                                ),
+                                          );
+                                        }),
                                         const SizedBox(height: 10),
                                         _buildActionButton(
                                           icon: Icons.comment_rounded,
@@ -656,20 +670,21 @@ class _VideoScreenState extends State<VideoScreen> {
                                         ),
                                         const SizedBox(height: 10),
                                         Obx(() {
+                                          final favoriteCount = videoController
+                                              .getVideoFavoriteCount(
+                                                data.videoId,
+                                              );
+                                          final isFavorited = videoController
+                                              .isVideoFavorited(data.videoId);
+
                                           return _buildActionButton(
                                             icon:
-                                                videoController
-                                                        .isVideoFavorited(
-                                                          data.videoId,
-                                                        )
+                                                isFavorited
                                                     ? Icons.bookmark
                                                     : Icons.bookmark_border,
-                                            count: data.favoriteCount,
+                                            count: favoriteCount,
                                             color:
-                                                videoController
-                                                        .isVideoFavorited(
-                                                          data.videoId,
-                                                        )
+                                                isFavorited
                                                     ? Colors.yellow
                                                     : Colors.white,
                                             onTap:
@@ -923,26 +938,6 @@ class _VideoScreenState extends State<VideoScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  // Helper method to build TikTok-style circular buttons
-  Widget _buildTikTokButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.4),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: color, size: 22),
-      ),
     );
   }
 

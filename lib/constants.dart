@@ -37,3 +37,6 @@ const String tiktokIdPolicy =
 const String tiktokNamePolicy = 'Bạn chỉ có thể đổi tên hồ sơ của mình 7 ngày một lần.';
 
 const String tiktokBioPolicy = 'Your bio is a great way to let people know who you are and what you do. You can use hashtags and emojis to make it more fun!';
+
+// Route Observer for navigation awareness
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();

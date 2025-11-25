@@ -9,6 +9,7 @@ import 'package:tiktok_clone_app/views/screens/video_screen.dart';
 import 'package:get/get.dart';
 
 import '../../controllers/profile_controller.dart';
+import '../../controllers/video_controller.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -42,6 +43,10 @@ class HomeScreenState extends State<HomeScreen> {
                 setState(() {
                   pageIndex = index;
                 });
+                
+                // Update VideoController tab focus state
+                Get.find<VideoController>().isHomeTabFocused.value = (index == 0);
+                
                 // If Profile tab is selected (index 4), reset to current user
                 if (index == 4) {
                   Get.find<ProfileController>().updateUserId(authController.user.uid);

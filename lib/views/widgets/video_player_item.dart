@@ -4,6 +4,8 @@ import 'package:tiktok_clone_app/views/widgets/tiktok_bottom_sheet.dart';
 import 'package:video_player/video_player.dart';
 import 'package:get/get.dart';
 
+import '../../constants.dart';
+
 class VideoPlayerItem extends StatefulWidget {
   final String videoUrl;
   final String videoId;
@@ -32,7 +34,7 @@ class VideoPlayerItem extends StatefulWidget {
   State<VideoPlayerItem> createState() => _VideoPlayerItemState();
 }
 
-class _VideoPlayerItemState extends State<VideoPlayerItem> {
+class _VideoPlayerItemState extends State<VideoPlayerItem> with RouteAware {
   late VideoPlayerController videoPlayerController;
   VideoController videoController = Get.find();
   final TikTokBottomSheet tiktokBottomSheet = TikTokBottomSheet();
@@ -40,6 +42,7 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
   bool _showControls = false;
   bool _isDragging = false;
   bool _isPause = false;
+  bool _isRouteTop = true; // Track if this route is on top
 
   @override
   void initState() {
@@ -85,19 +88,56 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
         }
       }
     });
+
+    // Listen to tab focus changes
+    ever(videoController.isHomeTabFocused, (bool isFocused) {
+      if (mounted && videoPlayerController.value.isInitialized) {
+        if (isFocused && _isRouteTop && !_isPause) {
+          videoPlayerController.play();
+        } else {
+          videoPlayerController.pause();
+        }
+      }
+    });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    videoPlayerController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didPushNext() {
+    // Called when a new route is pushed on top of this one
+    _isRouteTop = false;
+    if (videoPlayerController.value.isInitialized) {
+      videoPlayerController.pause();
+    }
+  }
+
+  @override
+  void didPopNext() {
+    // Called when the top route is popped and this one becomes visible again
+    _isRouteTop = true;
+    if (videoPlayerController.value.isInitialized && 
+        videoController.isHomeTabFocused.value && 
+        !_isPause) {
+      videoPlayerController.play();
+    }
+  }
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return '$minutes:$seconds';
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    videoPlayerController.dispose();
   }
 
   @override

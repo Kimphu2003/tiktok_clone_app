@@ -1,5 +1,4 @@
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -11,13 +10,12 @@ import 'package:tiktok_clone_app/controllers/pip_controller.dart';
 import 'package:tiktok_clone_app/controllers/profile_controller.dart';
 import 'package:tiktok_clone_app/controllers/sound_controller.dart';
 import 'package:tiktok_clone_app/controllers/video_controller.dart';
-import 'package:tiktok_clone_app/helper/pip_overlay_manager.dart';
 import 'package:tiktok_clone_app/models/video_model.dart';
 import 'package:tiktok_clone_app/views/screens/add_friend_screen.dart';
-import 'package:tiktok_clone_app/views/screens/auth/login_screen.dart';
 import 'package:tiktok_clone_app/views/screens/edit_profile_detail_screen.dart';
 import 'package:tiktok_clone_app/views/screens/edit_profile_screen.dart';
 import 'package:tiktok_clone_app/views/screens/home_screen.dart';
+import 'package:tiktok_clone_app/views/widgets/auth_gate.dart';
 
 import 'controllers/auth_controller.dart';
 import 'firebase_options.dart';
@@ -49,16 +47,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      navigatorObservers: [routeObserver],
       debugShowCheckedModeBanner: false,
       title: 'Tiktok Clone App',
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: backgroundColor,
       ),
-      home: const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      ),
+      home: const AuthGate(),
       getPages: [
         GetPage(name: '/', page: () => const HomeScreen()),
         GetPage(name: '/details', page: () => EditProfileScreen()),
@@ -74,7 +69,6 @@ class MyApp extends StatelessWidget {
           name: '/edit-profile-detail/biography',
           page: () => EditProfileDetailScreen(field: 'Tiểu sử'),
         ),
-
         GetPage(
           name: '/add-friends',
           page: () => AddFriendScreen(uid: authController.user.uid),

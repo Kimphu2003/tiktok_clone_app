@@ -16,6 +16,7 @@ import '../views/screens/home_screen.dart';
 class AuthController extends GetxController {
   final Rx<User?> _user = Rx<User?>(firebaseAuth.currentUser);
   static AuthController instance = Get.find();
+  bool _isInitialized = false;
 
   User get user => _user.value!;
 
@@ -26,10 +27,19 @@ class AuthController extends GetxController {
     ever(_user, _setInitialScreen);
   }
 
-  _setInitialScreen(User? user) {
+  void _setInitialScreen(User? user) {
+    if (!_isInitialized) {
+      _isInitialized = true;
+      debugPrint('🔐 First initialization, skipping auto-navigation');
+      return;
+    }
+
+    // Navigate based on auth state
     if (user == null) {
+      debugPrint('🔐 User logged out, navigating to LoginScreen');
       Get.offAll(() => LoginScreen());
     } else {
+      debugPrint('🔐 User logged in: ${user.email}, navigating to HomeScreen');
       Get.offAll(() => const HomeScreen());
     }
   }

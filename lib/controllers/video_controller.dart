@@ -12,9 +12,14 @@ class VideoController extends GetxController {
 
   final RxList<String> _favoriteVideoIds = <String>[].obs;
 
-  List<String> get favoriteVideoIds => _favoriteVideoIds;
+  RxList<String> get favoriteVideoIds => _favoriteVideoIds;
 
   final RxInt totalFavoriteCount = 0.obs;
+
+  final RxBool isHomeTabFocused = true.obs;
+
+  final RxMap<String, List<String>> _videoLikes = <String, List<String>>{}.obs;
+  final RxMap<String, int> _videoFavoriteCounts = <String, int>{}.obs;
 
   @override
   void onInit() {
@@ -27,7 +32,11 @@ class VideoController extends GetxController {
           .map((QuerySnapshot query) {
             List<VideoModel> retVal = [];
             for (var element in query.docs) {
-              retVal.add(VideoModel.fromSnap(element));
+              VideoModel video = VideoModel.fromSnap(element);
+              retVal.add(video);
+
+              _videoLikes[video.videoId] = List<String>.from(video.likes);
+              _videoFavoriteCounts[video.videoId] = video.favoriteCount;
             }
             debugPrint('🎥 Fetched ${retVal.length} videos from Firestore');
             return retVal;
@@ -65,21 +74,87 @@ class VideoController extends GetxController {
     });
   }
 
-  Future<void> likeVideo(String videoId) async {
-    DocumentSnapshot doc =
-        await fireStore.collection('videos').doc(videoId).get();
-    var uid = firebaseAuth.currentUser!.uid;
+  // Get reactive like list for a video
+  List<String> getVideoLikes(String videoId) {
+    return _videoLikes[videoId] ?? [];
+  }
 
-    if ((doc.data()! as dynamic)['likes'].contains(uid)) {
-      await fireStore.collection('videos').doc(videoId).update({
-        'likes': FieldValue.arrayRemove([uid]),
-      });
+  // Get reactive favorite count for a video
+  int getVideoFavoriteCount(String videoId) {
+    return _videoFavoriteCounts[videoId] ?? 0;
+  }
+
+  // Check if current user liked the video
+  bool isVideoLiked(String videoId) {
+    final likes = _videoLikes[videoId] ?? [];
+    return likes.contains(firebaseAuth.currentUser!.uid);
+  }
+
+  Future<void> likeVideo(String videoId) async {
+    debugPrint('🔴 likeVideo called for videoId: $videoId');
+
+    var uid = firebaseAuth.currentUser!.uid;
+    final currentLikes = List<String>.from(_videoLikes[videoId] ?? []);
+    final isLiked = currentLikes.contains(uid);
+
+    // Optimistically update UI
+    if (isLiked) {
+      currentLikes.remove(uid);
+      debugPrint('🔴 Optimistically removing like from video $videoId');
     } else {
-      await fireStore.collection('videos').doc(videoId).update({
-        'likes': FieldValue.arrayUnion([uid]),
-      });
+      currentLikes.add(uid);
+      debugPrint('🔴 Optimistically adding like to video $videoId');
+    }
+    _videoLikes[videoId] = currentLikes;
+
+    try {
+      // Update Firestore
+      DocumentSnapshot doc = await fireStore.collection('videos').doc(videoId).get();
+
+      if ((doc.data()! as dynamic)['likes'].contains(uid)) {
+        debugPrint('🔴 Removing like from Firestore');
+        await fireStore.collection('videos').doc(videoId).update({
+          'likes': FieldValue.arrayRemove([uid]),
+        });
+      } else {
+        debugPrint('🔴 Adding like to Firestore');
+        await fireStore.collection('videos').doc(videoId).update({
+          'likes': FieldValue.arrayUnion([uid]),
+        });
+      }
+      debugPrint('🔴 likeVideo completed for videoId: $videoId');
+    } catch (e) {
+      // Revert optimistic update on error
+      debugPrint('🔴 Error liking video: $e, reverting');
+      if (isLiked) {
+        currentLikes.add(uid);
+      } else {
+        currentLikes.remove(uid);
+      }
+      _videoLikes[videoId] = currentLikes;
+      Get.snackbar('Error', 'Failed to update like');
     }
   }
+
+  // Future<void> likeVideo(String videoId) async {
+  //   debugPrint('🔴 likeVideo called for videoId: $videoId');
+  //   DocumentSnapshot doc =
+  //       await fireStore.collection('videos').doc(videoId).get();
+  //   var uid = firebaseAuth.currentUser!.uid;
+  //
+  //   if ((doc.data()! as dynamic)['likes'].contains(uid)) {
+  //     debugPrint('🔴 Removing like from video $videoId');
+  //     await fireStore.collection('videos').doc(videoId).update({
+  //       'likes': FieldValue.arrayRemove([uid]),
+  //     });
+  //   } else {
+  //     debugPrint('🔴 Adding like to video $videoId');
+  //     await fireStore.collection('videos').doc(videoId).update({
+  //       'likes': FieldValue.arrayUnion([uid]),
+  //     });
+  //   }
+  //   debugPrint('🔴 likeVideo completed for videoId: $videoId');
+  // }
 
   Future<void> toggleFollowUser(String uid, bool isFollowing) async {
     try {
@@ -122,24 +197,33 @@ class VideoController extends GetxController {
   }
 
   Future<void> toggleFavoriteVideo(String videoId) async {
+    debugPrint('🔖 toggleFavoriteVideo called for videoId: $videoId');
     try {
       String uid = authController.user.uid;
       final isFavorite = isVideoFavorited(videoId);
+      debugPrint('🔖 Current favorite status: $isFavorite');
 
       if (isFavorite) {
         _favoriteVideoIds.remove(videoId);
         totalFavoriteCount.value--;
+
+        _videoFavoriteCounts[videoId] = (_videoFavoriteCounts[videoId] ?? 1) - 1;
+        debugPrint('🔖 Removed from favorites. New count: ${totalFavoriteCount.value}');
       } else {
         _favoriteVideoIds.add(videoId);
         totalFavoriteCount.value++;
+
+        _videoFavoriteCounts[videoId] = (_videoFavoriteCounts[videoId] ?? 0) + 1;
+        debugPrint('🔖 Added to favorites. New count: ${totalFavoriteCount.value}');
       }
 
       await fireStore.collection('users').doc(uid).update({
         'favoriteVideos': _favoriteVideoIds.toList(),
       });
-      debugPrint('updated favorite videos successfully');
+      debugPrint('🔖 Firestore updated successfully');
       await _updateVideoFavoriteCount(videoId, isFavorite);
     } catch (e) {
+      debugPrint('🔖 Error toggling favorite: $e');
       throw Exception('Error toggling favorite video: $e');
     }
   }
