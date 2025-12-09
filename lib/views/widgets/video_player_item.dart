@@ -5,6 +5,7 @@ import 'package:video_player/video_player.dart';
 import 'package:get/get.dart';
 
 import '../../constants.dart';
+import '../../utils.dart';
 
 class VideoPlayerItem extends StatefulWidget {
   final String videoUrl;
@@ -133,12 +134,7 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> with RouteAware {
       videoPlayerController.play();
     }
   }
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -298,7 +294,7 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> with RouteAware {
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          _formatDuration(
+                                          formatDuration(
                                             videoPlayerController
                                                 .value
                                                 .position,
@@ -310,7 +306,7 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> with RouteAware {
                                           ),
                                         ),
                                         Text(
-                                          _formatDuration(
+                                          formatDuration(
                                             videoPlayerController
                                                 .value
                                                 .duration,

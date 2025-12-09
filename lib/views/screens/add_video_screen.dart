@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:tiktok_clone_app/views/screens/upload_video_screen.dart';
+import 'package:tiktok_clone_app/views/screens/video_recording_screen.dart';
 
 import '../../constants.dart';
 import '../../utils.dart';
@@ -42,7 +43,14 @@ class _AddVideoScreenState extends State<AddVideoScreen> {
             ),
             children: [
               SimpleDialogOption(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const VideoRecordingScreen(),
+                    ),
+                  );
+                },
                 child: const Text(
                   'Take a video',
                   style: TextStyle(fontSize: 18),

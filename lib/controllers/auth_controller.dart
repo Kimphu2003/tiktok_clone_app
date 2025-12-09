@@ -16,6 +16,8 @@ import '../views/screens/home_screen.dart';
 class AuthController extends GetxController {
   final Rx<User?> _user = Rx<User?>(firebaseAuth.currentUser);
   static AuthController instance = Get.find();
+
+  // Prevents navigation from running during the first stream event.
   bool _isInitialized = false;
 
   User get user => _user.value!;
@@ -23,7 +25,16 @@ class AuthController extends GetxController {
   @override
   void onReady() {
     super.onReady();
+    // Bind _user to Firebase auth stream
+    /*
+    This emits a new User? whenever:
+      login happens
+      logout happens
+      app restarts and Firebase restores session
+    */
     _user.bindStream(firebaseAuth.authStateChanges());
+    // watches the _user variable
+    // Every time _user changes, _setInitialScreen gets called.
     ever(_user, _setInitialScreen);
   }
 
@@ -85,7 +96,7 @@ class AuthController extends GetxController {
     }
   }
 
-  void updateProfilePhoto() async {
+  Future<void> updateProfilePhoto() async {
     try {
       final currentUser = firebaseAuth.currentUser;
       if (currentUser == null) {
@@ -115,7 +126,7 @@ class AuthController extends GetxController {
     }
   }
 
-  void registerUser(
+  Future<void> registerUser(
     String username,
     String email,
     String password,
@@ -173,7 +184,7 @@ class AuthController extends GetxController {
     }
   }
 
-  void login(String email, String password) async {
+  Future<void> login(String email, String password) async {
     try {
       if (email.isEmpty || password.isEmpty) {
         Get.snackbar('Missing fields!', 'Please fill all the fields');
@@ -215,7 +226,7 @@ class AuthController extends GetxController {
     }
   }
 
-  void signOut() async {
+  Future<void> signOut() async {
     try {
       await firebaseAuth.signOut();
     } catch(e) {

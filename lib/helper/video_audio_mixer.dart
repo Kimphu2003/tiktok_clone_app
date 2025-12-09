@@ -17,17 +17,12 @@ class VideoAudioMixer {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final outputPath = '${directory.path}/output_$timestamp.mp4';
 
-      // FFmpeg command to replace audio
-      final command =
-          '-i $videoPath '  // Input video
-          '-i $audioPath '  // Input audio
-          '-c:v copy '      // Copy video codec (fast, no re-encoding)
-          '-map 0:v:0 '     // Map video from first input
-          '-map 1:a:0 '     // Map audio from second input
-          '-af "volume=$audioVolume" '  // Set audio volume
-          '-shortest '      // Make output as long as shortest input
-          '-y '             // Overwrite output file
-          '$outputPath';
+      final command = buildReplaceAudioCommand(
+        videoPath: videoPath,
+        audioPath: audioPath,
+        volume: audioVolume,
+        output: outputPath,
+      );
 
       print('🎬 Starting video+audio mixing...');
       print('Command: ffmpeg $command');
@@ -49,5 +44,25 @@ class VideoAudioMixer {
       print('❌ Error mixing video: $e');
       return null;
     }
+  }
+
+  static String buildReplaceAudioCommand({
+    required String videoPath,
+    required String audioPath,
+    double volume = 1.0,
+    required String output,
+  }) {
+    return [
+      // FFmpeg command to replace audio
+      '-i', videoPath,
+      '-i', audioPath,
+      '-c:v', 'copy',
+      '-map', '0:v:0',
+      '-map', '1:a:0',
+      '-af', 'volume=$volume',
+      '-shortest',
+      '-y',
+      output,
+    ].join(' ');
   }
 }
