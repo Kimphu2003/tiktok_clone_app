@@ -6,12 +6,13 @@ import 'package:hive_flutter/adapters.dart';
 import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/controllers/comment_controller.dart';
 import 'package:tiktok_clone_app/controllers/livestream_controller.dart';
+import 'package:tiktok_clone_app/controllers/notification_controller.dart';
 import 'package:tiktok_clone_app/controllers/pip_controller.dart';
 import 'package:tiktok_clone_app/controllers/profile_controller.dart';
 import 'package:tiktok_clone_app/controllers/sound_controller.dart';
 import 'package:tiktok_clone_app/controllers/video_controller.dart';
 import 'package:tiktok_clone_app/models/video_model.dart';
-import 'package:tiktok_clone_app/views/screens/add_friend_screen.dart';
+import 'package:tiktok_clone_app/views/screens/activity_screen.dart';
 import 'package:tiktok_clone_app/views/screens/edit_profile_detail_screen.dart';
 import 'package:tiktok_clone_app/views/screens/edit_profile_screen.dart';
 import 'package:tiktok_clone_app/views/screens/home_screen.dart';
@@ -33,6 +34,7 @@ void main() async {
     Get.put(SoundController());
     Get.put(LiveStreamController());
     Get.put(PipManager());
+    Get.put(NotificationController());
   });
   await Hive.initFlutter();
   Hive.registerAdapter(VideoModelAdapter());
@@ -70,8 +72,8 @@ class MyApp extends StatelessWidget {
           page: () => EditProfileDetailScreen(field: 'Tiểu sử'),
         ),
         GetPage(
-          name: '/add-friends',
-          page: () => AddFriendScreen(uid: authController.user.uid),
+          name: '/activity',
+          page: () => ActivityScreen(),
         ),
       ],
     );

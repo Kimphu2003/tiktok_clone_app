@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
+import 'package:tiktok_clone_app/controllers/notification_controller.dart';
 import 'package:tiktok_clone_app/constants.dart';
 
 class ProfileController extends GetxController {
@@ -128,6 +129,12 @@ class ProfileController extends GetxController {
             .collection('following')
             .doc(targetUid)
             .set({});
+            
+        Get.find<NotificationController>().createNotification(
+          toUid: targetUid,
+          type: 'follow',
+          itemId: authController.user.uid,
+        );
       } else {
         await fireStore
             .collection('users')

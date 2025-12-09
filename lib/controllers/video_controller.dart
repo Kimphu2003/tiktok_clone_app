@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/models/video_model.dart';
+import 'package:tiktok_clone_app/controllers/notification_controller.dart';
 
 class VideoController extends GetxController {
   final Rx<List<VideoModel>> _videoList = Rx<List<VideoModel>>([]);
@@ -121,6 +122,7 @@ class VideoController extends GetxController {
         await fireStore.collection('videos').doc(videoId).update({
           'likes': FieldValue.arrayUnion([uid]),
         });
+        _sendLikeNotification(videoId);
       }
       debugPrint('🔴 likeVideo completed for videoId: $videoId');
     } catch (e) {
@@ -133,6 +135,21 @@ class VideoController extends GetxController {
       }
       _videoLikes[videoId] = currentLikes;
       Get.snackbar('Error', 'Failed to update like');
+    }
+  }
+
+  Future<void> _sendLikeNotification(String videoId) async {
+    try {
+      DocumentSnapshot doc = await fireStore.collection('videos').doc(videoId).get();
+      String toUid = (doc.data()! as dynamic)['uid'];
+      
+      Get.find<NotificationController>().createNotification(
+        toUid: toUid,
+        type: 'like',
+        itemId: videoId,
+      );
+    } catch (e) {
+      debugPrint('Error sending like notification: $e');
     }
   }
 
@@ -222,6 +239,10 @@ class VideoController extends GetxController {
       });
       debugPrint('🔖 Firestore updated successfully');
       await _updateVideoFavoriteCount(videoId, isFavorite);
+      
+      if (!isFavorite) { // Added to favorites
+        _sendFavoriteNotification(videoId);
+      }
     } catch (e) {
       debugPrint('🔖 Error toggling favorite: $e');
       throw Exception('Error toggling favorite video: $e');
@@ -237,6 +258,21 @@ class VideoController extends GetxController {
       debugPrint('updated video favorite count successfully');
     } catch (e) {
       throw Exception('Error updating video favorite count: $e');
+    }
+  }
+
+  Future<void> _sendFavoriteNotification(String videoId) async {
+    try {
+      DocumentSnapshot doc = await fireStore.collection('videos').doc(videoId).get();
+      String toUid = (doc.data()! as dynamic)['uid'];
+      
+      Get.find<NotificationController>().createNotification(
+        toUid: toUid,
+        type: 'favorite',
+        itemId: videoId,
+      );
+    } catch (e) {
+      debugPrint('Error sending favorite notification: $e');
     }
   }
 }
