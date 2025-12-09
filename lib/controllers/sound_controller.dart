@@ -8,6 +8,8 @@ import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/models/sound_model.dart';
 import 'package:http/http.dart' as http;
 
+import '../secrets/secret.dart';
+
 class SoundController extends GetxController {
   final Rx<List<Sound>> _soundList = Rx<List<Sound>>([]);
   final Rx<List<Sound>> _trendingSounds = Rx<List<Sound>>([]);

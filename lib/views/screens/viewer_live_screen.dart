@@ -1,14 +1,13 @@
-// FILE: lib/views/screens/viewer_live_screen.dart
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:tiktok_clone_app/constants.dart';
 
 import '../../controllers/livestream_controller.dart';
 import '../../models/stream_model.dart';
+import '../../secrets/secret.dart';
 
 class ViewerLiveScreen extends StatefulWidget {
   final LiveStream liveStream;

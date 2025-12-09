@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 
 import '../models/video_model.dart';
+import '../secrets/secret.dart';
 
 class UploadVideoController extends GetxController {
   final Box<VideoModel> videoBox = Hive.box<VideoModel>('videos');

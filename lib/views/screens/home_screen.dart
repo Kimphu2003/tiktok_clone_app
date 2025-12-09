@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/views/widgets/custom_add_icon.dart';
-import 'package:tiktok_clone_app/views/screens/add_friend_screen.dart';
+import 'package:tiktok_clone_app/views/screens/activity_screen.dart';
 import 'package:tiktok_clone_app/views/screens/add_video_screen.dart';
 import 'package:tiktok_clone_app/views/screens/profile_screen.dart';
 import 'package:tiktok_clone_app/views/screens/search_screen.dart';
 import 'package:tiktok_clone_app/views/screens/video_screen.dart';
 import 'package:get/get.dart';
 
+import '../../constants.dart';
 import '../../controllers/profile_controller.dart';
 import '../../controllers/video_controller.dart';
 
@@ -25,7 +25,7 @@ class HomeScreenState extends State<HomeScreen> {
     VideoScreen(),
     SearchScreen(),
     const AddVideoScreen(),
-    AddFriendScreen(uid: authController.user.uid),
+    const ActivityScreen(),
     ProfileScreen(uid: authController.user.uid),
   ];
 
@@ -63,8 +63,8 @@ class HomeScreenState extends State<HomeScreen> {
                 BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
                 BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
                 BottomNavigationBarItem(icon: CustomAddIcon(), label: ''),
-                BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Notifications'),
-                BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+                BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Hộp thư'),
+                BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Hồ sơ'),
               ],
             ),
       body: IndexedStack(
