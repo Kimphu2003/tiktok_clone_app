@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/models/comment_model.dart';
 
+import 'package:tiktok_clone_app/controllers/notification_controller.dart';
+
 class CommentController extends GetxController {
   final Rx<List<Comment>> _comments = Rx<List<Comment>>([]);
 
@@ -15,7 +17,7 @@ class CommentController extends GetxController {
     getComments();
   }
 
-  getComments() async {
+  Future<void> getComments() async {
     _comments.bindStream(
       fireStore
           .collection('videos')
@@ -33,7 +35,7 @@ class CommentController extends GetxController {
     );
   }
 
-  postComment(String commentText) async {
+  Future<void> postComment(String commentText) async {
     try {
       if (commentText.isNotEmpty) {
         DocumentSnapshot userDoc =
@@ -72,20 +74,27 @@ class CommentController extends GetxController {
             .collection('comments')
             .doc(videoId)
             .set(comment.toJson());
-      }
 
-      // DocumentSnapshot doc = await fireStore.collection('comments').doc(_postId).get();
+        DocumentSnapshot doc = await fireStore.collection('videos').doc(_postId).get();
+        String toUid = (doc.data()! as dynamic)['uid'];
+
+        Get.find<NotificationController>().createNotification(
+          toUid: toUid,
+          type: 'comment',
+          itemId: _postId,
+        );
+      }
 
       await fireStore.collection('videos').doc(_postId).update({
         'commentCount': FieldValue.increment(1),
       });
+
     } catch (e) {
       Get.snackbar('Error posting comment', e.toString());
-      // Get.back();
     }
   }
 
-  likeComment(String videoId) async {
+  Future<void> likeComment(String videoId) async {
     DocumentSnapshot doc =
         await fireStore
             .collection('videos')

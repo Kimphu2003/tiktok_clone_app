@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone_app/constants.dart';
 import 'package:tiktok_clone_app/controllers/comment_controller.dart';
+import 'package:tiktok_clone_app/controllers/notification_controller.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class CommentBottomSheet extends StatefulWidget {
   final String videoId;
-  
+
   const CommentBottomSheet({super.key, required this.videoId});
 
   @override
@@ -16,6 +17,7 @@ class CommentBottomSheet extends StatefulWidget {
 class _CommentBottomSheetState extends State<CommentBottomSheet> {
   final TextEditingController _commentController = TextEditingController();
   final CommentController commentController = Get.find();
+  final NotificationController notificationController = Get.find();
   final FocusNode _focusNode = FocusNode();
 
   @override
@@ -58,21 +60,23 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              
+
               // Header
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Obx(() => Text(
-                      '${commentController.comments.length} comments',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    )),
+                    Obx(() =>
+                        Text(
+                          '${commentController.comments.length} comments',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        )),
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.white),
                       onPressed: () => Navigator.pop(context),
@@ -80,9 +84,9 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                   ],
                 ),
               ),
-              
+
               const Divider(height: 1, color: Colors.grey),
-              
+
               // Comments list
               Expanded(
                 child: Obx(() {
@@ -98,7 +102,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                       ),
                     );
                   }
-                  
+
                   return ListView.builder(
                     controller: scrollController,
                     itemCount: commentController.comments.length,
@@ -116,11 +120,12 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                             // Profile photo
                             CircleAvatar(
                               radius: 18,
-                              backgroundImage: NetworkImage(comment.profilePhoto),
+                              backgroundImage: NetworkImage(
+                                  comment.profilePhoto),
                               backgroundColor: Colors.grey[800],
                             ),
                             const SizedBox(width: 12),
-                            
+
                             // Comment content
                             Expanded(
                               child: Column(
@@ -150,12 +155,13 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  
+
                                   // Time and likes
                                   Row(
                                     children: [
                                       Text(
-                                        timeago.format(comment.datePublished.toDate()),
+                                        timeago.format(
+                                            comment.datePublished.toDate()),
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Colors.grey[500],
@@ -164,7 +170,10 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                                       const SizedBox(width: 16),
                                       if (comment.likes.isNotEmpty)
                                         Text(
-                                          '${comment.likes.length} ${comment.likes.length == 1 ? 'like' : 'likes'}',
+                                          '${comment.likes.length} ${comment
+                                              .likes.length == 1
+                                              ? 'like'
+                                              : 'likes'}',
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: Colors.grey[500],
@@ -176,18 +185,22 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                                 ],
                               ),
                             ),
-                            
+
                             // Like button
                             InkWell(
-                              onTap: () => commentController.likeComment(comment.videoId),
+                              onTap: () =>
+                                  commentController.likeComment(
+                                      comment.videoId),
                               child: Padding(
                                 padding: const EdgeInsets.all(4),
                                 child: Icon(
-                                  comment.likes.contains(authController.user.uid)
+                                  comment.likes.contains(
+                                      authController.user.uid)
                                       ? Icons.favorite
                                       : Icons.favorite_border,
                                   size: 20,
-                                  color: comment.likes.contains(authController.user.uid)
+                                  color: comment.likes.contains(
+                                      authController.user.uid)
                                       ? Colors.red
                                       : Colors.grey[400],
                                 ),
@@ -200,16 +213,19 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                   );
                 }),
               ),
-              
+
               const Divider(height: 1, color: Colors.grey),
-              
+
               // Comment input
               Container(
                 padding: EdgeInsets.only(
                   left: 16,
                   right: 16,
                   top: 8,
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 8,
+                  bottom: MediaQuery
+                      .of(context)
+                      .viewInsets
+                      .bottom + 8,
                 ),
                 child: Row(
                   children: [
@@ -268,8 +284,10 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
   }
 
   void _postComment() async {
-    if (_commentController.text.trim().isEmpty) return;
-    
+    if (_commentController.text
+        .trim()
+        .isEmpty) return;
+
     await commentController.postComment(_commentController.text.trim());
     _commentController.clear();
     _focusNode.unfocus();
